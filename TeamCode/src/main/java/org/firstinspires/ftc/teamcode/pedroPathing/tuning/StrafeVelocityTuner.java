@@ -139,7 +139,8 @@ public class StrafeVelocityTuner extends OpMode {
                     motor.setPower(0);
                 }
             } else {
-                double currentVelocity = Math.abs(MathFunctions.dotProduct(poseUpdater.getVelocity(), new Vector(1, Math.PI / 2)));
+                double currentVelocity = Math.abs(MathFunctions.dotProduct(poseUpdater.getVelocity(),
+                        new Vector(1, Math.PI / 2)));
                 velocities.add(currentVelocity);
                 velocities.remove(0);
             }
@@ -158,6 +159,10 @@ public class StrafeVelocityTuner extends OpMode {
             average /= (double) velocities.size();
 
             telemetryA.addData("strafe velocity:", average);
+            telemetryA.addData("X-position", poseUpdater.getPose().getX());
+            telemetryA.addData("Y-position", poseUpdater.getPose().getY());
+            telemetryA.addData("Z-heading", poseUpdater.getPose().getHeading());
+
             telemetryA.update();
         }
     }

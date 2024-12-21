@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
+import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
@@ -46,10 +47,17 @@ public class StraightBackAndForth extends OpMode {
     @Override
     public void init() {
         follower = new Follower(hardwareMap);
+//        telemetryA.addData("X-position", follower.getPose().getX());
+//        telemetryA.addData("Y-position", follower.getPose().getY());
+//        telemetryA.addData("Z-heading", follower.getPose().getHeading());
+//        telemetryA.update();
+        follower.setPose(new Pose(0,0,0));
 
-        forwards = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN), new Point(DISTANCE,0, Point.CARTESIAN)));
+        forwards = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN),
+                                           new Point(0,DISTANCE, Point.CARTESIAN)));
         forwards.setConstantHeadingInterpolation(0);
-        backwards = new Path(new BezierLine(new Point(DISTANCE,0, Point.CARTESIAN), new Point(0,0, Point.CARTESIAN)));
+        backwards = new Path(new BezierLine(new Point(0,DISTANCE, Point.CARTESIAN),
+                                            new Point(0,0, Point.CARTESIAN)));
         backwards.setConstantHeadingInterpolation(0);
 
         follower.followPath(forwards);
@@ -72,13 +80,21 @@ public class StraightBackAndForth extends OpMode {
             if (forward) {
                 forward = false;
                 follower.followPath(backwards);
+                telemetryA.addData("going backward", forward);
+
             } else {
                 forward = true;
                 follower.followPath(forwards);
+                telemetryA.addData("going forward", forward);
+
             }
         }
 
-        telemetryA.addData("going forward", forward);
-        follower.telemetryDebug(telemetryA);
+        telemetryA.addData("X-position", follower.getPose().getX());
+        telemetryA.addData("Y-position", follower.getPose().getY());
+        telemetryA.addData("Z-heading", follower.getPose().getHeading());
+        telemetryA.update();
+
+        //follower.telemetryDebug(telemetryA);
     }
 }

@@ -160,6 +160,8 @@ public class ForwardVelocityTuner extends OpMode {
             average /= (double) velocities.size();
 
             telemetryA.addData("forward velocity:", average);
+            telemetryA.addData("X-position", poseUpdater.getPose().getX());
+            telemetryA.addData("Y-position", poseUpdater.getPose().getY());
             telemetryA.update();
         }
     }
