@@ -77,7 +77,7 @@ public class PinpointLocalizer extends Localizer {
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD);
 
         //2000 ticks /48 mm (wheel diameter)
-        odo.setEncoderResolution(41.66);
+        //odo.setEncoderResolution(41.66);
         //TODO: Set encoder directions
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
@@ -96,7 +96,9 @@ public class PinpointLocalizer extends Localizer {
     @Override
     public Pose getPose() {
         Pose2D rawPose = odo.getPosition();
-        return new Pose(rawPose.getX(DistanceUnit.INCH), rawPose.getY(DistanceUnit.INCH), rawPose.getHeading(AngleUnit.RADIANS));
+        return new Pose(rawPose.getX(DistanceUnit.INCH),
+                        rawPose.getY(DistanceUnit.INCH),
+                        rawPose.getHeading(AngleUnit.RADIANS));
     }
 
     /**

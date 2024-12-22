@@ -11,6 +11,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathBuilder;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 
 /**
@@ -53,15 +55,28 @@ public class StraightBackAndForth extends OpMode {
 //        telemetryA.update();
         follower.setPose(new Pose(0,0,0));
 
+//        PathChain builder;
+//
+//        builder = follower.pathBuilder()
+//                .addPath(new BezierLine(
+//                new Point(0.00, 0.00, Point.CARTESIAN),
+//                new Point(40.00, 0.00, Point.CARTESIAN)))
+//                .setLinearHeadingInterpolation(
+//                        follower.getPose().getHeading(),
+//                        follower.getPose().getHeading()
+//                )
+//                        .build();
+//
+//        follower.followPath(builder, true);
+
         forwards = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN),
-                                           new Point(0,DISTANCE, Point.CARTESIAN)));
+                                           new Point(DISTANCE,0, Point.CARTESIAN)));
         forwards.setConstantHeadingInterpolation(0);
-        backwards = new Path(new BezierLine(new Point(0,DISTANCE, Point.CARTESIAN),
+        backwards = new Path(new BezierLine(new Point(DISTANCE,0, Point.CARTESIAN),
                                             new Point(0,0, Point.CARTESIAN)));
         backwards.setConstantHeadingInterpolation(0);
 
         follower.followPath(forwards);
-
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryA.addLine("This will run the robot in a straight line going " + DISTANCE
                             + " inches forward. The robot will go forward and backward continuously"
@@ -89,6 +104,7 @@ public class StraightBackAndForth extends OpMode {
 
             }
         }
+
 
         telemetryA.addData("X-position", follower.getPose().getX());
         telemetryA.addData("Y-position", follower.getPose().getY());

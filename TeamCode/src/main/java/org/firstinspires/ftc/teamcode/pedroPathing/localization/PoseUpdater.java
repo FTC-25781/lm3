@@ -178,7 +178,9 @@ public class PoseUpdater {
      * @return This returns a new Pose with the offset applied.
      */
     public Pose applyOffset(Pose pose) {
-        return new Pose(pose.getX()+xOffset, pose.getY()+yOffset, pose.getHeading()+headingOffset);
+        return new Pose(pose.getX()+xOffset,
+                        pose.getY()+yOffset,
+                   pose.getHeading()+headingOffset);
     }
 
     /**

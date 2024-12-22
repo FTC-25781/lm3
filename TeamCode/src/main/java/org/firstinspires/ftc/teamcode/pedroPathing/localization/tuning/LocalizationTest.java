@@ -114,7 +114,9 @@ public class LocalizationTest extends OpMode {
         rightRear.setPower(rightRearPower);
 
         telemetryA.addData("x", poseUpdater.getPose().getX());
+        telemetryA.addData("offset-x",poseUpdater.getXOffset());
         telemetryA.addData("y", poseUpdater.getPose().getY());
+        telemetryA.addData("offset-y",poseUpdater.getYOffset());
         telemetryA.addData("Z", poseUpdater.getPose().getHeading());
 
         telemetryA.addData("heading", poseUpdater.getPose().getHeading());

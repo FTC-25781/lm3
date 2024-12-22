@@ -141,7 +141,8 @@ public class ForwardVelocityTuner extends OpMode {
                     motor.setPower(0);
                 }
             } else {
-                double currentVelocity = Math.abs(MathFunctions.dotProduct(poseUpdater.getVelocity(), new Vector(1, 0)));
+                double currentVelocity = Math.abs(MathFunctions.dotProduct(poseUpdater.getVelocity(),
+                                                                           new Vector(1, 0)));
                 velocities.add(currentVelocity);
                 velocities.remove(0);
             }
@@ -160,9 +161,10 @@ public class ForwardVelocityTuner extends OpMode {
             average /= (double) velocities.size();
 
             telemetryA.addData("forward velocity:", average);
-            telemetryA.addData("X-position", poseUpdater.getPose().getX());
-            telemetryA.addData("Y-position", poseUpdater.getPose().getY());
-            telemetryA.update();
         }
+
+        telemetryA.addData("X-position", poseUpdater.getPose().getX());
+        telemetryA.addData("Y-position", poseUpdater.getPose().getY());
+        telemetryA.update();
     }
 }
