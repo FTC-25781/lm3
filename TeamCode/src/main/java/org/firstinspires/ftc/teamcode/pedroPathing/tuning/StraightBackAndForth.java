@@ -109,6 +109,8 @@ public class StraightBackAndForth extends OpMode {
         telemetryA.addData("X-position", follower.getPose().getX());
         telemetryA.addData("Y-position", follower.getPose().getY());
         telemetryA.addData("Z-heading", follower.getPose().getHeading());
+        telemetryA.addData("Target", DISTANCE);
+
         telemetryA.update();
 
         //follower.telemetryDebug(telemetryA);
