@@ -24,10 +24,10 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.KalmanFilterParameters;
 public class FollowerConstants {
 
     // This section is for configuring your motors
-    public static String leftFrontMotorName = "leftFront";
-    public static String leftBackMotorName = "leftBack";
-    public static String rightFrontMotorName = "rightFront";
-    public static String rightBackMotorName = "rightBack";
+    public static String leftFrontMotorName = "leftFront"; // port 0
+    public static String leftBackMotorName = "leftBack"; // port 2
+    public static String rightFrontMotorName = "rightFront"; // Port 1
+    public static String rightBackMotorName = "rightBack"; // port 3
 
     public static DcMotorSimple.Direction leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
     public static DcMotorSimple.Direction rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
@@ -91,7 +91,7 @@ public class FollowerConstants {
 
 
     // Mass of robot in kilograms
-    public static double mass = 5.05;
+    public static double mass = 20;
 
     // Centripetal force to power scaling
     public static double centripetalScaling = 0.0011;
