@@ -12,17 +12,39 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 
+import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositClawSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositSlideSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositV4BSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeClawSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeSlideSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeV4BSubsystem;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 @Autonomous(name = "Example Auto Blue", group = "Examples")
 public class autoDefault extends OpMode {
-
+    private ExecutorService executorService;
     private Follower follower;
-    private Timer pathTimer, actionTimer, opmodeTimer;
+    private Timer pathTimer, opmodeTimer;
 
-    /** This is the variable where we store the state of our auto.
-     * It is used by the pathUpdate method. */
+    public DepositClawSubsystem depositClaw;
+    public DepositSlideSubsystem depositSlide;
+    public DepositV4BSubsystem depositV4B;
+    public IntakeClawSubsystem intakeClaw;
+    public IntakeSlideSubsystem intakeSlide;
+    public IntakeV4BSubsystem intakeV4B;
+
+
+    /**
+     * This is the variable where we store the state of our auto.
+     * It is used by the pathUpdate method.
+     */
     private int pathState;
 
-    /** Create and Define Poses + Paths */
+    /**
+     * Create and Define Poses + Paths
+     */
     private final Pose startPose = new Pose(9, 111, Math.toRadians(270));
     private final Pose scorePose = new Pose(14, 129, Math.toRadians(315));
     private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0));
@@ -36,7 +58,9 @@ public class autoDefault extends OpMode {
     private Path scorePreload, park;
     private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
 
-    /** Build the paths for the auto */
+    /**
+     * Build the paths for the auto
+     */
     public void buildPaths() {
         scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose)));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
@@ -75,7 +99,9 @@ public class autoDefault extends OpMode {
         park.setLinearHeadingInterpolation(scorePose.getHeading(), parkPose.getHeading());
     }
 
-    /** Path update logic */
+    /**
+     * Path update logic
+     */
     private long stateStartTime = System.currentTimeMillis(); // Track the time when the state starts
     private static final long DELAY_MILLIS = 1000; // Delay duration in milliseconds (1 second)
 
@@ -83,9 +109,10 @@ public class autoDefault extends OpMode {
         long currentTime = System.currentTimeMillis(); // Get the current time
 
         switch (pathState) {
-            case 0:
+            case 0: // Score the preload
                 if (isStateReady(currentTime)) {
                     follower.followPath(scorePreload);
+                    scorePreload();
                     setPathState(1);
                 }
                 break;
@@ -98,7 +125,7 @@ public class autoDefault extends OpMode {
                 }
                 break;
             case 2: // Score first yellow sample
-                if (follower.getPose().getX() > (pickup1Pose.getX() - 1) &&
+                if ( follower.getPose().getX() > (pickup1Pose.getX() - 1) &&
                         follower.getPose().getY() > (pickup1Pose.getY() - 1) &&
                         isStateReady(currentTime)) {
                     follower.followPath(scorePickup1, true);
@@ -116,8 +143,7 @@ public class autoDefault extends OpMode {
             case 4: // navigate to Score position from pick second sample
                 if (follower.getPose().getX() > (pickup2Pose.getX() - 1) &&
                         follower.getPose().getY() > (pickup2Pose.getY() - 1) &&
-                        isStateReady(currentTime))
-                {
+                        isStateReady(currentTime)) {
                     follower.followPath(scorePickup2, true);
                     setPathState(5);
                 }
@@ -125,13 +151,12 @@ public class autoDefault extends OpMode {
             case 5: // navigate to pick third sample position from score position
                 if (follower.getPose().getX() > (scorePose.getX() - 1) &&
                         follower.getPose().getY() > (scorePose.getY() - 1) &&
-                        isStateReady(currentTime))
-                {
+                        isStateReady(currentTime)) {
                     follower.followPath(grabPickup3, true);
                     setPathState(6);
                 }
                 break;
-            case 6:
+            case 6: // Come back to drop the sample
                 if (follower.getPose().getX() > (pickup3Pose.getX() - 1) &&
                         follower.getPose().getY() > (pickup3Pose.getY() - 1) &&
                         isStateReady(currentTime)) {
@@ -164,7 +189,9 @@ public class autoDefault extends OpMode {
         return (currentTime - stateStartTime) > DELAY_MILLIS;
     }
 
-    /** Change the state of the paths */
+    /**
+     * Change the state of the paths
+     */
     public void setPathState(int pState) {
         pathState = pState;
         pathTimer.resetTimer();
@@ -187,18 +214,59 @@ public class autoDefault extends OpMode {
     public void init() {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
-
         opmodeTimer.resetTimer();
 
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
 
+        // Initialize subsystems
+        depositClaw = new DepositClawSubsystem(hardwareMap);
+        depositSlide = new DepositSlideSubsystem(hardwareMap, telemetry);
+        depositV4B = new DepositV4BSubsystem(hardwareMap);
+        intakeClaw = new IntakeClawSubsystem(hardwareMap);
+        intakeSlide = new IntakeSlideSubsystem(hardwareMap, telemetry);
+        intakeV4B = new IntakeV4BSubsystem(hardwareMap);
+
+        // Initialize ExecutorService
+        executorService = Executors.newFixedThreadPool(3); // 3 threads for subsystem tasks
+
         buildPaths();
     }
 
-    @Override
-    public void init_loop() {}
+    private void scorePreload() {
+        executorService.submit(() -> {
+            try {
+                // Slide extension and V4B movement
+                Thread slideThread = new Thread(() -> depositSlide.extendDepositMainSlide());
+                slideThread.start();
+                slideThread.join();
+
+                // Actions
+                depositV4B.setWristDropPosition();
+                Thread.sleep(300);
+                depositClaw.openDepositClaw();
+                Thread.sleep(200);
+
+                // Retraction and V4B reset
+                Thread slideThreadClose = new Thread(() -> depositSlide.retractDepositMainSlide());
+                Thread v4bThreadPick = new Thread(() -> depositV4B.setWristPickPosition());
+
+                slideThreadClose.start();
+                v4bThreadPick.start();
+
+                slideThreadClose.join();
+                v4bThreadPick.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+    }
 
     @Override
-    public void stop() {}
+    public void init_loop() {
+    }
+
+    @Override
+    public void stop() {
+    }
 }
