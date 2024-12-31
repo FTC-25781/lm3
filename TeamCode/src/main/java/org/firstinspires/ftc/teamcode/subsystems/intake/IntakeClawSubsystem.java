@@ -44,8 +44,9 @@ public class IntakeClawSubsystem {
     }
 
     // Opens the claw to a pre-defined position
-    public void openClaw() {
+    public Runnable openClaw() {
         clawServo.setPosition(CLAW_OPEN_POS);
+        return null;
     }
 
     // Closes the claw to a pre-defined position

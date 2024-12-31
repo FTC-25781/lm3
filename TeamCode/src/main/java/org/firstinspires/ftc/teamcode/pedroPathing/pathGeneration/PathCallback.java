@@ -12,7 +12,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.SingleRunAction;
  * @version 1.0, 3/11/2024
  */
 public class PathCallback extends SingleRunAction {
-
     private double startCondition;
 
     private int type;

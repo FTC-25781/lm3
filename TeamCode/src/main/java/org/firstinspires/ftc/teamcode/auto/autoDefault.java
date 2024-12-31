@@ -40,7 +40,7 @@ public class autoDefault extends OpMode {
      * This is the variable where we store the state of our auto.
      * It is used by the pathUpdate method.
      */
-    private int pathState;
+    private int pathState=0;
 
     /**
      * Create and Define Poses + Paths
@@ -54,16 +54,18 @@ public class autoDefault extends OpMode {
     private final Pose pickup3ControlPose = new Pose(38.9, 80.3, Math.toRadians(0));
     private final Pose parkPose = new Pose(60, 98, Math.toRadians(90));
     private final Pose parkControlPose = new Pose(60, 98, Math.toRadians(90));
-
-    private Path scorePreload, park;
-    private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+    private Path park;
+    private PathChain scorePreload, grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
 
     /**
      * Build the paths for the auto
      */
     public void buildPaths() {
-        scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose)));
-        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
+        scorePreload = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(startPose), new Point(scorePose)))
+                .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
+                .addParametricCallback(1, depositSlide.extendDepositMainSlide())
+                .build();
 
         grabPickup1 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(scorePose), new Point(pickup1Pose)))
@@ -112,7 +114,6 @@ public class autoDefault extends OpMode {
             case 0: // Score the preload
                 if (isStateReady(currentTime)) {
                     follower.followPath(scorePreload);
-                    scorePreload();
                     setPathState(1);
                 }
                 break;
@@ -231,35 +232,6 @@ public class autoDefault extends OpMode {
         executorService = Executors.newFixedThreadPool(3); // 3 threads for subsystem tasks
 
         buildPaths();
-    }
-
-    private void scorePreload() {
-        executorService.submit(() -> {
-            try {
-                // Slide extension and V4B movement
-                Thread slideThread = new Thread(() -> depositSlide.extendDepositMainSlide());
-                slideThread.start();
-                slideThread.join();
-
-                // Actions
-                depositV4B.setWristDropPosition();
-                Thread.sleep(300);
-                depositClaw.openDepositClaw();
-                Thread.sleep(200);
-
-                // Retraction and V4B reset
-                Thread slideThreadClose = new Thread(() -> depositSlide.retractDepositMainSlide());
-                Thread v4bThreadPick = new Thread(() -> depositV4B.setWristPickPosition());
-
-                slideThreadClose.start();
-                v4bThreadPick.start();
-
-                slideThreadClose.join();
-                v4bThreadPick.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
     }
 
     @Override

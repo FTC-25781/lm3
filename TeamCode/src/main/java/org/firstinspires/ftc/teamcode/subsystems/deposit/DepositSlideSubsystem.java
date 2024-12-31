@@ -1,16 +1,10 @@
 package org.firstinspires.ftc.teamcode.subsystems.deposit;
 
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositV4BSubsystem;
-
-import java.util.concurrent.TimeUnit;
 
 public class DepositSlideSubsystem {
 
@@ -54,7 +48,7 @@ public class DepositSlideSubsystem {
         }
     }
 
-    public void extendDepositMainSlide() {
+    public Runnable extendDepositMainSlide() {
         verticalSlideMotor.setTargetPosition(SLIDE_EXTEND_POS);
         verticalSlideMotor2.setTargetPosition(SLIDE_EXTEND_POS);
         verticalSlideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -73,6 +67,7 @@ public class DepositSlideSubsystem {
 
         verticalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        return null;
     }
 
     public void retractDepositMainSlide() {
