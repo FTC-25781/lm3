@@ -64,7 +64,7 @@ public class autoDefault extends OpMode {
         scorePreload = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(startPose), new Point(scorePose)))
                 .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
-                .addParametricCallback(1, depositSlide.extendDepositMainSlide())
+//                .addParametricCallback(1, depositSlide.extendDepositMainSlide())
                 .build();
 
         grabPickup1 = follower.pathBuilder()
@@ -121,6 +121,7 @@ public class autoDefault extends OpMode {
                 if (follower.getPose().getX() > (scorePose.getX() - 1) &&
                         follower.getPose().getY() > (scorePose.getY() - 1) &&
                         isStateReady(currentTime)) {
+                    depositSlide.extendDepositMainSlide();
                     follower.followPath(grabPickup1, true);
                     setPathState(2);
                 }

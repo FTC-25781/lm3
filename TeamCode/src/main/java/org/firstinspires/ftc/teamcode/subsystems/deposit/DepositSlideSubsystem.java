@@ -5,8 +5,9 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
 
-public class DepositSlideSubsystem {
+public class DepositSlideSubsystem implements Subsystem {
 
     private final DigitalChannel depositLimitSwitch;
     public final DcMotor verticalSlideMotor;
