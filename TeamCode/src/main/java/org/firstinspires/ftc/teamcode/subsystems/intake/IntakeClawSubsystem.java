@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.subsystems.intake;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import java.util.concurrent.TimeUnit;
 
 public class IntakeClawSubsystem {
 
@@ -21,6 +24,8 @@ public class IntakeClawSubsystem {
         CLOSED,
         STOPPED
     }
+
+    ElapsedTime timer = new ElapsedTime();
 
     public IntakeClawSubsystem.IntakeClaw_state CURRENT_STATE = IntakeClawSubsystem.IntakeClaw_state.UNINITIALISED;
 
@@ -78,8 +83,16 @@ public class IntakeClawSubsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case OPENING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = IntakeClaw_state.OPENED;
+                }
                 break;
             case CLOSING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = IntakeClaw_state.CLOSED;
+                }
                 break;
             case OPENED:
                 break;
