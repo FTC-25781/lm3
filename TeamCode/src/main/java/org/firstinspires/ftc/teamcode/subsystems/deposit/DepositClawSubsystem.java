@@ -3,8 +3,12 @@ package org.firstinspires.ftc.teamcode.subsystems.deposit;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeSlideSubsystem;
+
+import java.util.concurrent.TimeUnit;
 
 public class DepositClawSubsystem implements Subsystem {
 
@@ -22,6 +26,8 @@ public class DepositClawSubsystem implements Subsystem {
         CLOSED,
         STOPPED
     }
+
+    ElapsedTime timer = new ElapsedTime();
 
     public DepositClawSubsystem.DepositClaw_state CURRENT_STATE = DepositClawSubsystem.DepositClaw_state.UNINITIALISED;
 
@@ -51,8 +57,16 @@ public class DepositClawSubsystem implements Subsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case OPENING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = DepositClaw_state.OPENED;
+                }
                 break;
             case CLOSING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = DepositClaw_state.CLOSED;
+                }
                 break;
             case OPENED:
                 break;

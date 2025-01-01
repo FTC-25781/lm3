@@ -2,7 +2,11 @@ package org.firstinspires.ftc.teamcode.subsystems.deposit;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
+
+import java.util.concurrent.TimeUnit;
 
 public class DepositV4BSubsystem implements Subsystem {
 
@@ -23,6 +27,8 @@ public class DepositV4BSubsystem implements Subsystem {
         SPECIMEN_POSITION,
         STOPPED
     }
+
+    ElapsedTime timer = new ElapsedTime();
 
     public DepositV4BSubsystem.Depositv4b_state CURRENT_STATE = DepositV4BSubsystem.Depositv4b_state.UNINITIALISED;
 
@@ -63,16 +69,28 @@ public class DepositV4BSubsystem implements Subsystem {
             case PICK_POSITION:
                 break;
             case PICK_POSITIONING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = Depositv4b_state.PICK_POSITION;
+                }
                 break;
             case DROP_POSITION:
                 break;
             case STOPPED:
                 break;
             case DROP_POSITIONING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = Depositv4b_state.DROP_POSITION;
+                }
                 break;
             case SPECIMEN_POSITION:
                 break;
             case SPECIMEN_POSITIONING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = Depositv4b_state.SPECIMEN_POSITION;
+                }
                 break;
             case INITIALISED:
                 break;
