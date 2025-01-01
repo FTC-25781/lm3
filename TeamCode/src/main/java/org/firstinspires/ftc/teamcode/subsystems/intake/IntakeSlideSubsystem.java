@@ -19,6 +19,19 @@ public class IntakeSlideSubsystem {
     private static final int SLIDE_EXTEND_POS = 800;
     private static final double SLIDE_EXTEND_SPEED = 0.5;
 
+    public static enum Intake_state {
+        INITIALISED,
+        UNINITIALISED,
+        EXTENDING,
+        EXTENDED,
+        RETRACTING,
+        RETRACTED,
+        STOPPED,
+        LIMIT_SW_HIT,
+        LIMIT_SW_NOT_HIT
+    }
+    public IntakeSlideSubsystem.Intake_state CURRENT_STATE= IntakeSlideSubsystem.Intake_state.UNINITIALISED;
+
     public IntakeSlideSubsystem(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
         slideMotor = hardwareMap.get(DcMotor.class, "hsmot");
@@ -28,30 +41,39 @@ public class IntakeSlideSubsystem {
 
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        CURRENT_STATE = IntakeSlideSubsystem.Intake_state.INITIALISED;
     }
 
     public void manualExtension(double power) {
         slideMotor.setPower(clampMotorPower(power));
     }
 
-    public void extendMainSlide() {
+    public Runnable extendMainSlide() {
+        if(CURRENT_STATE== IntakeSlideSubsystem.Intake_state.EXTENDING ||
+                CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED)
+            return null;
+
         ElapsedTime timer = new ElapsedTime();
         timer.reset();
         slideMotor.setPower(-0.8);
+        CURRENT_STATE = IntakeSlideSubsystem.Intake_state.EXTENDING;
 
         while (timer.time(TimeUnit.MILLISECONDS) > 1500) {
             telemetry.addData("Distance: ", slideMotor.getCurrentPosition());
             telemetry.update();
         }
         slideMotor.setPower(0);
+        return null;
     }
 
-    public void retractMainSlide() {
+    public Runnable retractMainSlide() {
         if (!intakeLimitSwitch.getState()) {
             stopAndResetSlide();
         } else {
             slideMotor.setPower(-SLIDE_EXTEND_SPEED);
         }
+        return null;
     }
 
     private void stopAndResetSlide() {
@@ -65,6 +87,48 @@ public class IntakeSlideSubsystem {
     }
 
     public void update() {
-        // Placeholder for periodic updates if needed
+        switch (CURRENT_STATE) {
+            case EXTENDING:
+                if (slideMotor.isBusy()) {
+                    telemetry.addData("current position: ", slideMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+                else {
+                    slideMotor.setPower(0);
+                    slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    CURRENT_STATE = IntakeSlideSubsystem.Intake_state.EXTENDED;
+                }
+                break;
+            case RETRACTING:
+                if (slideMotor.isBusy()) {
+                    telemetry.addData("current position: ", slideMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+                else {
+                    slideMotor.setPower(0);
+                    slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    CURRENT_STATE = IntakeSlideSubsystem.Intake_state.RETRACTED;
+                }
+                break;
+            case EXTENDED:
+                break;
+            case STOPPED:
+                break;
+            case RETRACTED:
+                break;
+            case INITIALISED:
+                break;
+            case LIMIT_SW_HIT:
+                break;
+            case UNINITIALISED:
+                break;
+            case LIMIT_SW_NOT_HIT:
+                break;
+            default:
+                break;
+        }
+        telemetry.addData("Current encoder value: ", slideMotor.getCurrentPosition());
+        telemetry.addData("current state: ", CURRENT_STATE.name() );
+        telemetry.update();
     }
 }
