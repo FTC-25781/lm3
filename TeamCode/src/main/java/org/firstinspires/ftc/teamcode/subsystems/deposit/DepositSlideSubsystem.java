@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.subsystems.deposit;
 
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
 
 public class DepositSlideSubsystem implements Subsystem {
@@ -13,6 +15,7 @@ public class DepositSlideSubsystem implements Subsystem {
     public final DcMotor verticalSlideMotor;
     public final DcMotor verticalSlideMotor2;
     public DepositV4BSubsystem depositV4B;
+    public UltrasonicDistanceSensor rangeSensor;
 
     private static final int SLIDE_EXTEND_POS = 3500;
     private static final int SLIDE_RETRACT_POS = 2000;
@@ -41,7 +44,7 @@ public class DepositSlideSubsystem implements Subsystem {
         verticalSlideMotor = hardwareMap.get(DcMotor.class, "vsmot");
         verticalSlideMotor2 = hardwareMap.get(DcMotor.class, "vsmot2");
         depositLimitSwitch = hardwareMap.get(DigitalChannel.class, "dpltsw");
-
+        rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"));
 
         verticalSlideMotor.setDirection(DcMotor.Direction.REVERSE);
         verticalSlideMotor2.setDirection(DcMotor.Direction.FORWARD);

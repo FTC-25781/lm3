@@ -16,7 +16,7 @@ public class IntakeSlideSubsystem {
     private final DigitalChannel intakeLimitSwitch;
     public final Telemetry telemetry;
 
-    private static final int SLIDE_EXTEND_POS = 800;
+    private static final int SLIDE_EXTEND_POS = -5700;
     private static final double SLIDE_EXTEND_SPEED = 0.5;
 
     public static enum Intake_state {
@@ -54,17 +54,11 @@ public class IntakeSlideSubsystem {
                 CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED)
             return null;
 
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        slideMotor.setPower(-0.8);
+        slideMotor.setTargetPosition(SLIDE_EXTEND_POS);
+        slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        slideMotor.setPower(-1);
+
         CURRENT_STATE = IntakeSlideSubsystem.Intake_state.EXTENDING;
-
-        while (timer.time(TimeUnit.MILLISECONDS) > 1500) {
-            telemetry.addData("Distance: ", slideMotor.getCurrentPosition());
-            telemetry.update();
-        }
-
-        slideMotor.setPower(0);
         return null;
     }
 
@@ -72,8 +66,10 @@ public class IntakeSlideSubsystem {
         if (!intakeLimitSwitch.getState()) {
             stopAndResetSlide();
         } else {
-            slideMotor.setPower(-SLIDE_EXTEND_SPEED);
+            slideMotor.setPower(1);
         }
+
+        CURRENT_STATE = Intake_state.RETRACTING;
         return null;
     }
 
