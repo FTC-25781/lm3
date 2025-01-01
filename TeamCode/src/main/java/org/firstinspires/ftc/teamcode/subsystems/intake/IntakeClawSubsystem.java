@@ -66,6 +66,7 @@ public class IntakeClawSubsystem {
     public Runnable openClaw() {
         clawServo.setPosition(CLAW_OPEN_POS);
         CURRENT_STATE = IntakeClaw_state.OPENING;
+        timer.reset();
         return null;
     }
 
@@ -73,6 +74,7 @@ public class IntakeClawSubsystem {
     public Runnable closeClaw() {
         clawServo.setPosition(CLAW_CLOSED_POS);
         CURRENT_STATE = IntakeClaw_state.CLOSING;
+        timer.reset();
         return null;
     }
 
@@ -83,13 +85,11 @@ public class IntakeClawSubsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case OPENING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = IntakeClaw_state.OPENED;
                 }
                 break;
             case CLOSING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = IntakeClaw_state.CLOSED;
                 }

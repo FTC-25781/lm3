@@ -44,12 +44,14 @@ public class DepositClawSubsystem implements Subsystem {
     public Runnable openDepositClaw() {
         clawServo.setPosition(CLAW_OPEN_POS);
         CURRENT_STATE = DepositClaw_state.OPENING;
+        timer.reset();
         return null;
     }
 
     public Runnable closeDepositClaw() {
         clawServo.setPosition(CLAW_CLOSED_POS);
         CURRENT_STATE = DepositClaw_state.CLOSING;
+        timer.reset();
         return null;
     }
 
@@ -57,13 +59,11 @@ public class DepositClawSubsystem implements Subsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case OPENING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = DepositClaw_state.OPENED;
                 }
                 break;
             case CLOSING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = DepositClaw_state.CLOSED;
                 }

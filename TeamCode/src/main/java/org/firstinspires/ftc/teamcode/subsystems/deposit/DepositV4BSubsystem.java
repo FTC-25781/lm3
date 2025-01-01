@@ -43,18 +43,21 @@ public class DepositV4BSubsystem implements Subsystem {
     public Runnable setWristDropPosition() {
         setWristPosition(DROP, DROP);
         CURRENT_STATE = Depositv4b_state.DROP_POSITIONING;
+        timer.reset();
         return null;
     }
 
     public Runnable setWristPickPosition() {
         setWristPosition(PICKUP, PICKUP);
         CURRENT_STATE = Depositv4b_state.PICK_POSITIONING;
+        timer.reset();
         return null;
     }
 
     public Runnable setWristSpecimenDropPosition() {
         setWristPosition(SPECIMEN_DROP, SPECIMEN_DROP);
         CURRENT_STATE = Depositv4b_state.SPECIMEN_POSITIONING;
+        timer.reset();
         return null;
     }
 
@@ -69,7 +72,6 @@ public class DepositV4BSubsystem implements Subsystem {
             case PICK_POSITION:
                 break;
             case PICK_POSITIONING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = Depositv4b_state.PICK_POSITION;
                 }
@@ -79,7 +81,6 @@ public class DepositV4BSubsystem implements Subsystem {
             case STOPPED:
                 break;
             case DROP_POSITIONING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = Depositv4b_state.DROP_POSITION;
                 }
@@ -87,7 +88,6 @@ public class DepositV4BSubsystem implements Subsystem {
             case SPECIMEN_POSITION:
                 break;
             case SPECIMEN_POSITIONING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = Depositv4b_state.SPECIMEN_POSITION;
                 }
