@@ -63,6 +63,7 @@ public class IntakeSlideSubsystem {
             telemetry.addData("Distance: ", slideMotor.getCurrentPosition());
             telemetry.update();
         }
+
         slideMotor.setPower(0);
         return null;
     }
