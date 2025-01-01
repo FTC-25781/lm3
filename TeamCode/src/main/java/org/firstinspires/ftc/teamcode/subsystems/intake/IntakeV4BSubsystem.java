@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.subsystems.intake;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositSlideSubsystem;
+
 public class IntakeV4BSubsystem {
 
     public final Servo wristServo1;
@@ -16,26 +18,52 @@ public class IntakeV4BSubsystem {
     private static final double PICKUP = 0.05;
     private static final double AUTO_PICKUP = 0.07;
 
+    public static enum Intakev4b_state {
+        INITIALISED,
+        UNINITIALISED,
+        PICK_POSITIONING,
+        PICK_POSITION,
+        DROP_POSITIONING,
+        DROP_POSITION,
+        DEFAULT_POSITIONING,
+        DEFAULT_POSITION,
+        AUTO_POSITIONING,
+        AUTO_POSITION,
+        STOPPED
+    }
+
+    public IntakeV4BSubsystem.Intakev4b_state CURRENT_STATE = IntakeV4BSubsystem.Intakev4b_state.UNINITIALISED;
+
     public IntakeV4BSubsystem(HardwareMap hardwareMap) {
         wristServo1 = hardwareMap.get(Servo.class, "wsrv1");
         wristServo2 = hardwareMap.get(Servo.class, "wsrv2");
 
         wristServo1.setDirection(Servo.Direction.REVERSE);
+
+        CURRENT_STATE = Intakev4b_state.INITIALISED;
     }
 
-    public void setWristDropPosition() {
+    public Runnable setWristDropPosition() {
         smoothSetWristPosition(DROP, DROP);
+        CURRENT_STATE = Intakev4b_state.DROP_POSITIONING;
+        return null;
     }
 
-    public void setWristDefaultPosition() {
+    public Runnable setWristDefaultPosition() {
         smoothSetWristPosition(DEFAULT, DEFAULT);
+        CURRENT_STATE = Intakev4b_state.DEFAULT_POSITIONING;
+        return null;
     }
 
-    public void setWristPickPosition() {
+    public Runnable setWristPickPosition() {
         smoothSetWristPosition(PICKUP, PICKUP);
+        CURRENT_STATE = Intakev4b_state.PICK_POSITIONING;
+        return null;
     }
-    public void setWristPickAutoPosition() {
+    public Runnable setWristPickAutoPosition() {
         smoothSetWristPosition(AUTO_PICKUP, AUTO_PICKUP);
+        CURRENT_STATE = Intakev4b_state.AUTO_POSITIONING;
+        return null;
     }
 
     private void smoothSetWristPosition(double targetPos1, double targetPos2) {
@@ -62,6 +90,31 @@ public class IntakeV4BSubsystem {
     }
 
     public void update() {
-
+        switch (CURRENT_STATE) {
+            case DROP_POSITIONING:
+                break;
+            case PICK_POSITIONING:
+                break;
+            case AUTO_POSITIONING:
+                break;
+            case DEFAULT_POSITIONING:
+                break;
+            case DROP_POSITION:
+                break;
+            case PICK_POSITION:
+                break;
+            case AUTO_POSITION:
+                break;
+            case DEFAULT_POSITION:
+                break;
+            case UNINITIALISED:
+                break;
+            case INITIALISED:
+                break;
+            case STOPPED:
+                break;
+            default:
+                break;
+        }
     }
 }

@@ -12,6 +12,18 @@ public class IntakeClawSubsystem {
     private static final double CLAW_CLOSED_POS = 1.0;
     private double currentOrientation = 0.0;
 
+    public static enum IntakeClaw_state {
+        INITIALISED,
+        UNINITIALISED,
+        OPENING,
+        OPENED,
+        CLOSING,
+        CLOSED,
+        STOPPED
+    }
+
+    public IntakeClawSubsystem.IntakeClaw_state CURRENT_STATE = IntakeClawSubsystem.IntakeClaw_state.UNINITIALISED;
+
     public IntakeClawSubsystem(HardwareMap hardwareMap) {
         clawServo = hardwareMap.get(Servo.class, "clsrv");
         orientationServo = hardwareMap.get(Servo.class, "orsrv");
@@ -19,6 +31,8 @@ public class IntakeClawSubsystem {
         if (clawServo == null || orientationServo == null) {
             throw new IllegalArgumentException("Failed to initialize one or more servos.");
         }
+
+        CURRENT_STATE = IntakeClaw_state.INITIALISED;
     }
 
     // Moves orientation servo to preset position
@@ -46,12 +60,15 @@ public class IntakeClawSubsystem {
     // Opens the claw to a pre-defined position
     public Runnable openClaw() {
         clawServo.setPosition(CLAW_OPEN_POS);
+        CURRENT_STATE = IntakeClaw_state.OPENING;
         return null;
     }
 
     // Closes the claw to a pre-defined position
-    public void closeClaw() {
+    public Runnable closeClaw() {
         clawServo.setPosition(CLAW_CLOSED_POS);
+        CURRENT_STATE = IntakeClaw_state.CLOSING;
+        return null;
     }
 
     private double orientationClamp(double value) {
@@ -59,6 +76,23 @@ public class IntakeClawSubsystem {
     }
 
     public void update() {
-
+        switch (CURRENT_STATE) {
+            case OPENING:
+                break;
+            case CLOSING:
+                break;
+            case OPENED:
+                break;
+            case CLOSED:
+                break;
+            case INITIALISED:
+                break;
+            case UNINITIALISED:
+                break;
+            case STOPPED:
+                break;
+            default:
+                break;
+        }
     }
 }

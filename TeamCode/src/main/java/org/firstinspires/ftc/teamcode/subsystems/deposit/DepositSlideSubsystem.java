@@ -27,7 +27,8 @@ public class DepositSlideSubsystem implements Subsystem {
         STOPPED,
         LIMIT_SW_HIT,
         LIMIT_SW_NOT_HIT
-        }
+    }
+
     public Deposit_state CURRENT_STATE= Deposit_state.UNINITIALISED;
 
     public final Telemetry telemetry;
