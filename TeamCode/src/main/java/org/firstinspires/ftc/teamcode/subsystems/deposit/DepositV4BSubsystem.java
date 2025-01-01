@@ -12,24 +12,44 @@ public class DepositV4BSubsystem implements Subsystem {
     private static final double SPECIMEN_DROP = 0;
     private static final double DROP = 1.0;
     private static final double PICKUP = 0.29;
+    public static enum Depositv4b_state {
+        INITIALISED,
+        UNINITIALISED,
+        PICK_POSITIONING,
+        PICK_POSITION,
+        DROP_POSITIONING,
+        DROP_POSITION,
+        SPECIMEN_POSITIONING,
+        SPECIMEN_POSITION,
+        STOPPED
+    }
+
+    public DepositV4BSubsystem.Depositv4b_state CURRENT_STATE = DepositV4BSubsystem.Depositv4b_state.UNINITIALISED;
 
     public DepositV4BSubsystem(HardwareMap hardwareMap) {
         wristServo1 = hardwareMap.get(Servo.class, "dwsrv1");
         wristServo2 = hardwareMap.get(Servo.class, "dwsrv2");
 
         wristServo2.setDirection(Servo.Direction.REVERSE);
+        CURRENT_STATE = DepositV4BSubsystem.Depositv4b_state.INITIALISED;
     }
 
-    public void setWristDropPosition() {
+    public Runnable setWristDropPosition() {
         setWristPosition(DROP, DROP);
+        CURRENT_STATE = Depositv4b_state.DROP_POSITIONING;
+        return null;
     }
 
-    public void setWristPickPosition() {
+    public Runnable setWristPickPosition() {
         setWristPosition(PICKUP, PICKUP);
+        CURRENT_STATE = Depositv4b_state.PICK_POSITIONING;
+        return null;
     }
 
-    public void setWristSpecimenDropPosition() {
+    public Runnable setWristSpecimenDropPosition() {
         setWristPosition(SPECIMEN_DROP, SPECIMEN_DROP);
+        CURRENT_STATE = Depositv4b_state.SPECIMEN_POSITIONING;
+        return null;
     }
 
     private void setWristPosition(double pos1, double pos2) {
@@ -39,6 +59,27 @@ public class DepositV4BSubsystem implements Subsystem {
 
     @Override
     public void update() {
-        // No-op: Implement update logic if necessary.
+        switch (CURRENT_STATE) {
+            case PICK_POSITION:
+                break;
+            case PICK_POSITIONING:
+                break;
+            case DROP_POSITION:
+                break;
+            case STOPPED:
+                break;
+            case DROP_POSITIONING:
+                break;
+            case SPECIMEN_POSITION:
+                break;
+            case SPECIMEN_POSITIONING:
+                break;
+            case INITIALISED:
+                break;
+            case UNINITIALISED:
+                break;
+            default:
+                break;
+        }
     }
 }
