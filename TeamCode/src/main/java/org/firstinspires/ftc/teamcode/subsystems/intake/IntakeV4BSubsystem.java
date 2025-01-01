@@ -51,23 +51,27 @@ public class IntakeV4BSubsystem {
     public Runnable setWristDropPosition() {
         smoothSetWristPosition(DROP, DROP);
         CURRENT_STATE = Intakev4b_state.DROP_POSITIONING;
+        timer.reset();
         return null;
     }
 
     public Runnable setWristDefaultPosition() {
         smoothSetWristPosition(DEFAULT, DEFAULT);
         CURRENT_STATE = Intakev4b_state.DEFAULT_POSITIONING;
+        timer.reset();
         return null;
     }
 
     public Runnable setWristPickPosition() {
         smoothSetWristPosition(PICKUP, PICKUP);
         CURRENT_STATE = Intakev4b_state.PICK_POSITIONING;
+        timer.reset();
         return null;
     }
     public Runnable setWristPickAutoPosition() {
         smoothSetWristPosition(AUTO_PICKUP, AUTO_PICKUP);
         CURRENT_STATE = Intakev4b_state.AUTO_POSITIONING;
+        timer.reset();
         return null;
     }
 
@@ -97,25 +101,21 @@ public class IntakeV4BSubsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case DROP_POSITIONING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = Intakev4b_state.DROP_POSITION;
                 }
                 break;
             case PICK_POSITIONING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = Intakev4b_state.PICK_POSITION;
                 }
                 break;
             case AUTO_POSITIONING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = Intakev4b_state.AUTO_POSITION;
                 }
                 break;
             case DEFAULT_POSITIONING:
-                timer.reset();
                 if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
                     CURRENT_STATE = Intakev4b_state.DEFAULT_POSITION;
                 }
