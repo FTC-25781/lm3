@@ -2,8 +2,11 @@ package org.firstinspires.ftc.teamcode.subsystems.intake;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositSlideSubsystem;
+
+import java.util.concurrent.TimeUnit;
 
 public class IntakeV4BSubsystem {
 
@@ -31,6 +34,8 @@ public class IntakeV4BSubsystem {
         AUTO_POSITION,
         STOPPED
     }
+
+    ElapsedTime timer = new ElapsedTime();
 
     public IntakeV4BSubsystem.Intakev4b_state CURRENT_STATE = IntakeV4BSubsystem.Intakev4b_state.UNINITIALISED;
 
@@ -92,12 +97,28 @@ public class IntakeV4BSubsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case DROP_POSITIONING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = Intakev4b_state.DROP_POSITION;
+                }
                 break;
             case PICK_POSITIONING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = Intakev4b_state.PICK_POSITION;
+                }
                 break;
             case AUTO_POSITIONING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = Intakev4b_state.AUTO_POSITION;
+                }
                 break;
             case DEFAULT_POSITIONING:
+                timer.reset();
+                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                    CURRENT_STATE = Intakev4b_state.DEFAULT_POSITION;
+                }
                 break;
             case DROP_POSITION:
                 break;
