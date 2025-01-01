@@ -119,11 +119,17 @@ public class autoDefault extends OpMode {
                 break;
             case 1: // Pick first yellow sample
                 if (follower.getPose().getX() > (scorePose.getX() - 1) &&
-                        follower.getPose().getY() > (scorePose.getY() - 1) &&
-                        isStateReady(currentTime)) {
-                    depositSlide.extendDepositMainSlide();
-                    follower.followPath(grabPickup1, true);
-                    setPathState(2);
+                    follower.getPose().getY() > (scorePose.getY() - 1) &&
+                    isStateReady(currentTime)) {
+                        depositSlide.extendDepositMainSlide();
+
+                        if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
+                            depositV4B.setWristDropPosition();
+                            depositClaw.openDepositClaw();
+
+                            //follower.followPath(grabPickup1, true);
+                            //setPathState(2);
+                        }
                 }
                 break;
             case 2: // Score first yellow sample
@@ -204,6 +210,7 @@ public class autoDefault extends OpMode {
     public void loop() {
         follower.update();
         autonomousPathUpdate();
+        depositSlide.update();
 
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());

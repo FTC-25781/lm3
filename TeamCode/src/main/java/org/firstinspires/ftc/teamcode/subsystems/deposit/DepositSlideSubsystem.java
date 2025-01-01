@@ -14,8 +14,21 @@ public class DepositSlideSubsystem implements Subsystem {
     public final DcMotor verticalSlideMotor2;
     public DepositV4BSubsystem depositV4B;
 
-    private static final int SLIDE_EXTEND_POS = 10500;
+    private static final int SLIDE_EXTEND_POS = 3500;
     private static final int SLIDE_RETRACT_POS = 2000;
+
+    public static enum Deposit_state {
+        INITIALISED,
+        UNINITIALISED,
+        EXTENDING,
+        EXTENDED,
+        RETRACTING,
+        RETRACTED,
+        STOPPED,
+        LIMIT_SW_HIT,
+        LIMIT_SW_NOT_HIT
+        }
+    public Deposit_state CURRENT_STATE= Deposit_state.UNINITIALISED;
 
     public final Telemetry telemetry;
 
@@ -36,6 +49,7 @@ public class DepositSlideSubsystem implements Subsystem {
         verticalSlideMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         depositLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
+        CURRENT_STATE = Deposit_state.INITIALISED;
     }
 
     public void manualExtension(double power) {
@@ -50,6 +64,10 @@ public class DepositSlideSubsystem implements Subsystem {
     }
 
     public Runnable extendDepositMainSlide() {
+        if(CURRENT_STATE== DepositSlideSubsystem.Deposit_state.EXTENDING ||
+        CURRENT_STATE == Deposit_state.EXTENDED)
+            return null;
+
         verticalSlideMotor.setTargetPosition(SLIDE_EXTEND_POS);
         verticalSlideMotor2.setTargetPosition(SLIDE_EXTEND_POS);
         verticalSlideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -57,39 +75,18 @@ public class DepositSlideSubsystem implements Subsystem {
 
         verticalSlideMotor.setPower(1);
         verticalSlideMotor2.setPower(1);
-
-        while (verticalSlideMotor.isBusy() && verticalSlideMotor2.isBusy()) {
-            telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
-            telemetry.update();
-        }
-
-        verticalSlideMotor.setPower(0);
-        verticalSlideMotor2.setPower(0);
-
-        verticalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        CURRENT_STATE = Deposit_state.EXTENDING;
         return null;
     }
 
-    public void retractDepositMainSlide() {
+    public Runnable retractDepositMainSlide() {
         verticalSlideMotor.setTargetPosition(SLIDE_RETRACT_POS);
         verticalSlideMotor2.setTargetPosition(SLIDE_RETRACT_POS);
         verticalSlideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
         verticalSlideMotor.setPower(-1);
         verticalSlideMotor2.setPower(-1);
-
-        while (verticalSlideMotor.isBusy() && verticalSlideMotor2.isBusy()) {
-            telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
-            telemetry.update();
-        }
-
-        verticalSlideMotor.setPower(0);
-        verticalSlideMotor2.setPower(0);
-
-        verticalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        return null;
     }
 
 
@@ -111,6 +108,53 @@ public class DepositSlideSubsystem implements Subsystem {
     }
 
     public void update() {
+        switch (CURRENT_STATE) {
+            case EXTENDING:
+                if (verticalSlideMotor.isBusy() && verticalSlideMotor2.isBusy()) {
+                    telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+                else {
+                    verticalSlideMotor.setPower(0);
+                    verticalSlideMotor2.setPower(0);
+                    verticalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    CURRENT_STATE = Deposit_state.EXTENDED;
+                }
+                break;
+            case RETRACTING:
+                if (verticalSlideMotor.isBusy() && verticalSlideMotor2.isBusy()) {
+                    telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+                else {
+                    verticalSlideMotor.setPower(0);
+                    verticalSlideMotor2.setPower(0);
 
+                    verticalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    CURRENT_STATE = Deposit_state.RETRACTED;
+                }
+                break;
+            case EXTENDED:
+                break;
+            case STOPPED:
+                break;
+            case RETRACTED:
+                break;
+            case INITIALISED:
+                break;
+            case LIMIT_SW_HIT:
+                break;
+            case UNINITIALISED:
+                break;
+            case LIMIT_SW_NOT_HIT:
+                break;
+            default:
+                break;
+        }
+        telemetry.addData("Current encode value: ", verticalSlideMotor.getCurrentPosition());
+        telemetry.addData("current state: ", CURRENT_STATE.name() );
+        telemetry.update();
     }
 }
