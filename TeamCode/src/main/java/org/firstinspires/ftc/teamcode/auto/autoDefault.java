@@ -126,9 +126,9 @@ public class autoDefault extends OpMode {
                         if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
                             depositV4B.setWristDropPosition();
                             depositClaw.openDepositClaw();
-
-                            //follower.followPath(grabPickup1, true);
-                            //setPathState(2);
+//
+//                            //follower.followPath(grabPickup1, true);
+//                            //setPathState(2);
                         }
                 }
                 break;

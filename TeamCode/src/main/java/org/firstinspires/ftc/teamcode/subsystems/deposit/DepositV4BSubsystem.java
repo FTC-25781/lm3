@@ -13,9 +13,9 @@ public class DepositV4BSubsystem implements Subsystem {
     public final Servo wristServo1;
     public final Servo wristServo2;
 
-    private static final double SPECIMEN_DROP = 0;
-    private static final double DROP = 1.0;
-    private static final double PICKUP = 0.29;
+    private static final double SPECIMEN_DROP = 1.0;
+    private static final double DROP = 0.0;
+    private static final double PICKUP = 0.73;
     public static enum Depositv4b_state {
         INITIALISED,
         UNINITIALISED,
