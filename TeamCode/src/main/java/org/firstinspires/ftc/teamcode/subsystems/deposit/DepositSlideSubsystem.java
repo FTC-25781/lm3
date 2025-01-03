@@ -4,10 +4,15 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
+
+import java.util.concurrent.TimeUnit;
 
 public class DepositSlideSubsystem implements Subsystem {
 
@@ -19,6 +24,10 @@ public class DepositSlideSubsystem implements Subsystem {
 
     private static final int SLIDE_EXTEND_POS = 3500;
     private static final int SLIDE_RETRACT_POS = 2000;
+    private static final int MAX_HEIGHT = 48;
+    private static final int V4B_HEIGHT = 22;
+    private static final int RETRACT_HEIGHT = 18;
+
 
     public static enum Deposit_state {
         INITIALISED,
@@ -32,8 +41,8 @@ public class DepositSlideSubsystem implements Subsystem {
         LIMIT_SW_NOT_HIT
     }
 
-    public Deposit_state CURRENT_STATE= Deposit_state.UNINITIALISED;
-
+    public Deposit_state CURRENT_STATE = Deposit_state.UNINITIALISED;
+    ElapsedTime timer = new ElapsedTime();
     public final Telemetry telemetry;
 
     public DepositSlideSubsystem(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -72,10 +81,10 @@ public class DepositSlideSubsystem implements Subsystem {
         CURRENT_STATE == Deposit_state.EXTENDED)
             return null;
 
-        verticalSlideMotor.setTargetPosition(SLIDE_EXTEND_POS);
-        verticalSlideMotor2.setTargetPosition(SLIDE_EXTEND_POS);
-        verticalSlideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        if (rangeSensor.getDistance(DistanceUnit.INCH) >= MAX_HEIGHT) {
+            return null;
+        }
 
         verticalSlideMotor.setPower(1);
         verticalSlideMotor2.setPower(1);
@@ -84,12 +93,15 @@ public class DepositSlideSubsystem implements Subsystem {
     }
 
     public Runnable retractDepositMainSlide() {
-        verticalSlideMotor.setTargetPosition(SLIDE_RETRACT_POS);
-        verticalSlideMotor2.setTargetPosition(SLIDE_RETRACT_POS);
-        verticalSlideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //ToDo: Check is already at or below retract position if so return null.
+        if (rangeSensor.getDistance(DistanceUnit.INCH) <= RETRACT_HEIGHT) {
+            return null;
+        }
+
         verticalSlideMotor.setPower(-1);
         verticalSlideMotor2.setPower(-1);
+        // ToDo: set the state
+        CURRENT_STATE = Deposit_state.RETRACTING;
         return null;
     }
 
@@ -114,29 +126,29 @@ public class DepositSlideSubsystem implements Subsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case EXTENDING:
-                if (verticalSlideMotor.isBusy() && verticalSlideMotor2.isBusy()) {
-                    telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
+                if (rangeSensor.getDistance(DistanceUnit.INCH) < MAX_HEIGHT) {
+                    telemetry.addData("current value: ", rangeSensor.getDistance(DistanceUnit.INCH));
                     telemetry.update();
                 }
                 else {
                     verticalSlideMotor.setPower(0);
                     verticalSlideMotor2.setPower(0);
-                    verticalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     CURRENT_STATE = Deposit_state.EXTENDED;
                 }
+
+                if (rangeSensor.getDistance(DistanceUnit.INCH) > V4B_HEIGHT ) {
+                    depositV4B.setWristSpecimenDropPosition();
+                }
+
                 break;
             case RETRACTING:
-                if (verticalSlideMotor.isBusy() && verticalSlideMotor2.isBusy()) {
+                if (rangeSensor.getDistance(DistanceUnit.INCH) > RETRACT_HEIGHT) {
                     telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
                     telemetry.update();
                 }
                 else {
                     verticalSlideMotor.setPower(0);
                     verticalSlideMotor2.setPower(0);
-
-                    verticalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     CURRENT_STATE = Deposit_state.RETRACTED;
                 }
                 break;
