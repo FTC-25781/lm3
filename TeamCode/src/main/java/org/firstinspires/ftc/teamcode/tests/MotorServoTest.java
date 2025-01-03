@@ -29,6 +29,7 @@ public class MotorServoTest extends LinearOpMode {
 
         leftDrive  = hardwareMap.get(DcMotor.class, "vsmot");
         rightDrive = hardwareMap.get(DcMotor.class, "vsmot2");
+
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
