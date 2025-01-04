@@ -19,12 +19,8 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeClawSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeSlideSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeV4BSubsystem;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 @Autonomous(name = "Example Auto Blue", group = "Examples")
 public class autoDefault extends OpMode {
-    private ExecutorService executorService;
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
 
@@ -35,36 +31,31 @@ public class autoDefault extends OpMode {
     public IntakeSlideSubsystem intakeSlide;
     public IntakeV4BSubsystem intakeV4B;
 
+    private int pathState=0;  // This is the variable where we store the state of our auto.
 
-    /**
-     * This is the variable where we store the state of our auto.
-     * It is used by the pathUpdate method.
-     */
-    private int pathState=0;
+    private final int RESOLUTION = 2; // Error of 2 inches
 
-    /**
-     * Create and Define Poses + Paths
-     */
+    // Create and Define Poses + Paths
     private final Pose startPose = new Pose(9, 111, Math.toRadians(270));
-    private final Pose scorePose = new Pose(14, 129, Math.toRadians(315));
-    private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0));
-    private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0));
-    private final Pose Score2ControlPose = new Pose(37, 121, Math.toRadians(0));
-    private final Pose pickup3Pose = new Pose(45.68, 142.11, Math.toRadians(90));
-    private final Pose pickup3ControlPose = new Pose(38.9, 80.3, Math.toRadians(0));
+    private final Pose scorePose = new Pose(10, 132, Math.toRadians(315));
+    private final Pose scoreSlidesPose = new Pose(15, 128, Math.toRadians(315));
+    private final Pose pickup1Pose = new Pose(23, 121, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(24, 129, Math.toRadians(0));
     private final Pose parkPose = new Pose(60, 98, Math.toRadians(90));
     private final Pose parkControlPose = new Pose(60, 98, Math.toRadians(90));
     private Path park;
-    private PathChain scorePreload, grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+    private PathChain slidesUp, scorePreload, grabPickup1, slidesUpPick1, grabPickup2, slidesUpPick2, scorePickup1, scorePickup2, scorePickup3;
 
-    /**
-     * Build the paths for the auto
-     */
+    // Build the paths for the auto
     public void buildPaths() {
+        slidesUp = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(startPose), new Point(scoreSlidesPose)))
+                .setLinearHeadingInterpolation(startPose.getHeading(), scoreSlidesPose.getHeading())
+                .build();
+
         scorePreload = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(startPose), new Point(scorePose)))
-                .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
-//                .addParametricCallback(1, depositSlide.extendDepositMainSlide())
+                .addPath(new BezierLine(new Point(scoreSlidesPose), new Point(scorePose)))
+                .setLinearHeadingInterpolation(scoreSlidesPose.getHeading(), scorePose.getHeading())
                 .build();
 
         grabPickup1 = follower.pathBuilder()
@@ -72,9 +63,14 @@ public class autoDefault extends OpMode {
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
                 .build();
 
+        slidesUpPick1 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(pickup1Pose), new Point(scoreSlidesPose)))
+                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), scoreSlidesPose.getHeading())
+                .build();
+
         scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickup1Pose), new Point(scorePose)))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), scorePose.getHeading())
+                .addPath(new BezierLine(new Point(scoreSlidesPose), new Point(scorePose)))
+                .setLinearHeadingInterpolation(scoreSlidesPose.getHeading(), scorePose.getHeading())
                 .build();
 
         grabPickup2 = follower.pathBuilder()
@@ -82,129 +78,111 @@ public class autoDefault extends OpMode {
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
                 .build();
 
+        slidesUpPick2 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(pickup2Pose), new Point(scoreSlidesPose)))
+                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scoreSlidesPose.getHeading())
+                .build();
+
         scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(pickup2Pose), new Point(Score2ControlPose), new Point(scorePose)))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scorePose.getHeading())
-                .build();
-
-        grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(scorePose), new Point(pickup3ControlPose), new Point(pickup3Pose)))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
-                .build();
-
-        scorePickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickup3Pose), new Point(scorePose)))
-                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), scorePose.getHeading())
+                .addPath(new BezierLine(new Point(scoreSlidesPose), new Point(scorePose)))
+                .setLinearHeadingInterpolation(scoreSlidesPose.getHeading(), scorePose.getHeading())
                 .build();
 
         park = new Path(new BezierCurve(new Point(scorePose), new Point(parkControlPose), new Point(parkPose)));
         park.setLinearHeadingInterpolation(scorePose.getHeading(), parkPose.getHeading());
     }
 
-    /**
-     * Path update logic
-     */
+
+    // Path update logic
     private long stateStartTime = System.currentTimeMillis(); // Track the time when the state starts
     private static final long DELAY_MILLIS = 1000; // Delay duration in milliseconds (1 second)
+
+    private boolean isWithinResolution(Pose currentPose, Pose targetPose) {
+        return Math.abs(currentPose.getX() - targetPose.getX()) <= RESOLUTION &&
+                Math.abs(currentPose.getY() - targetPose.getY()) <= RESOLUTION;
+    }
 
     public void autonomousPathUpdate() {
         long currentTime = System.currentTimeMillis(); // Get the current time
 
         switch (pathState) {
-            case 0: // Score the preload
+            case 0:
                 if (isStateReady(currentTime)) {
-                    follower.followPath(scorePreload);
+                    follower.followPath(slidesUp);
                     setPathState(1);
                 }
                 break;
-            case 1: // Pick first yellow sample
-                if (follower.getPose().getX() > (scorePose.getX() - 1) &&
-                    follower.getPose().getY() > (scorePose.getY() - 1) &&
-                    isStateReady(currentTime)) {
-                        depositSlide.extendDepositMainSlide();
 
-                        if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
-                            depositV4B.setWristDropPosition();
-                        }
-
-                        if(depositV4B.CURRENT_STATE== DepositV4BSubsystem.Depositv4b_state.DROP_POSITION) {
-                            //ToDo: wait for v4b to move to drop position
-                            depositClaw.openDepositClaw();
-
-//
-//                            //follower.followPath(grabPickup1, true);
-//                            //setPathState(2);
-                        }
+            case 1: // Score the preload
+                if (isStateReady(currentTime)) {
+                    follower.followPath(scorePreload);
+                    setPathState(2);
                 }
                 break;
-            case 2: // Score first yellow sample
-                if ( follower.getPose().getX() > (pickup1Pose.getX() - 1) &&
-                        follower.getPose().getY() > (pickup1Pose.getY() - 1) &&
-                        isStateReady(currentTime)) {
-                    follower.followPath(scorePickup1, true);
+
+            case 2: // Pick first yellow sample
+                if (isWithinResolution(follower.getPose(), scorePose) && isStateReady(currentTime)) {
+                    follower.followPath(grabPickup1, true);
                     setPathState(3);
                 }
                 break;
-            case 3: // navigate to Pick second yellow sample from score position
-                if (follower.getPose().getX() > (scorePose.getX() - 1) &&
-                        follower.getPose().getY() > (scorePose.getY() - 1) &&
-                        isStateReady(currentTime)) {
-                    follower.followPath(grabPickup2, true);
+
+            case 3:
+                if (isWithinResolution(follower.getPose(), pickup1Pose) && isStateReady(currentTime)) {
+                    follower.followPath(slidesUpPick1, true);
                     setPathState(4);
                 }
                 break;
-            case 4: // navigate to Score position from pick second sample
-                if (follower.getPose().getX() > (pickup2Pose.getX() - 1) &&
-                        follower.getPose().getY() > (pickup2Pose.getY() - 1) &&
-                        isStateReady(currentTime)) {
-                    follower.followPath(scorePickup2, true);
+
+            case 4: // Score first yellow sample
+                if (isWithinResolution(follower.getPose(), pickup2Pose) && isStateReady(currentTime)) {
+                    follower.followPath(scorePickup1, true);
                     setPathState(5);
                 }
                 break;
-            case 5: // navigate to pick third sample position from score position
-                if (follower.getPose().getX() > (scorePose.getX() - 1) &&
-                        follower.getPose().getY() > (scorePose.getY() - 1) &&
-                        isStateReady(currentTime)) {
-                    follower.followPath(grabPickup3, true);
+
+            case 5: // Navigate to pick second yellow sample
+                if (isWithinResolution(follower.getPose(), scorePose) && isStateReady(currentTime)) {
+                    follower.followPath(grabPickup2, true);
                     setPathState(6);
                 }
                 break;
-            case 6: // Come back to drop the sample
-                if (follower.getPose().getX() > (pickup3Pose.getX() - 1) &&
-                        follower.getPose().getY() > (pickup3Pose.getY() - 1) &&
-                        isStateReady(currentTime)) {
-                    follower.followPath(scorePickup3, true);
+
+            case 6:
+                if (isWithinResolution(follower.getPose(), pickup2Pose) && isStateReady(currentTime)) {
+                    follower.followPath(slidesUpPick2, true);
                     setPathState(7);
                 }
                 break;
-            case 7:
-                if (follower.getPose().getX() > (scorePose.getX() - 1) &&
-                        follower.getPose().getY() > (scorePose.getY() - 1) &&
-                        isStateReady(currentTime)) {
-                    follower.followPath(park, true);
+
+            case 7: // Navigate to score position from second sample
+                if (isWithinResolution(follower.getPose(), pickup2Pose) && isStateReady(currentTime)) {
+                    follower.followPath(scorePickup2, true);
                     setPathState(8);
                 }
                 break;
+
             case 8:
-                if (follower.getPose().getX() > (parkPose.getX() - 1) &&
-                        follower.getPose().getY() > (parkPose.getY() - 1) &&
-                        isStateReady(currentTime)) {
+                if (isWithinResolution(follower.getPose(), scorePose) && isStateReady(currentTime)) {
+                    follower.followPath(park, true);
+                    setPathState(9);
+                }
+                break;
+
+            case 9:
+                if (isWithinResolution(follower.getPose(), parkPose) && isStateReady(currentTime)) {
                     setPathState(-1); // End state
                 }
                 break;
         }
     }
 
-    /**
-     * Checks if the state is ready to transition after the delay.
-     */
+    // Checks if the state is ready to transition after the delay.
     private boolean isStateReady(long currentTime) {
         return (currentTime - stateStartTime) > DELAY_MILLIS;
     }
 
-    /**
-     * Change the state of the paths
-     */
+    // Change the state of the paths
     public void setPathState(int pState) {
         pathState = pState;
         pathTimer.resetTimer();
@@ -215,7 +193,8 @@ public class autoDefault extends OpMode {
     public void loop() {
         follower.update();
         autonomousPathUpdate();
-        depositSlide.update();
+//        depositSlide.update();
+//        intakeSlide.update();
 
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
@@ -240,9 +219,6 @@ public class autoDefault extends OpMode {
         intakeClaw = new IntakeClawSubsystem(hardwareMap);
         intakeSlide = new IntakeSlideSubsystem(hardwareMap, telemetry);
         intakeV4B = new IntakeV4BSubsystem(hardwareMap);
-
-        // Initialize ExecutorService
-        executorService = Executors.newFixedThreadPool(3); // 3 threads for subsystem tasks
 
         buildPaths();
     }
