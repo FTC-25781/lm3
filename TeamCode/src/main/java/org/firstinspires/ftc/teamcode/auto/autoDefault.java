@@ -117,17 +117,17 @@ public class autoDefault extends OpMode {
             case 1: // Score the preload
                 if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
                     long stateStartTimeSlides = System.currentTimeMillis();
-
+                    depositClaw.closeDepositClaw();
                     depositSlide.extendDepositMainSlide();
-                    if (System.currentTimeMillis() - stateStartTime > 2000) {
-                        depositV4B.setWristDropPosition();
+                    if (System.currentTimeMillis() - stateStartTimeSlides > 2000) {
+                        depositV4B.setWristSpecimenDropPosition();
                     }
 
                     if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
-                        depositV4B.setWristSpecimenDropPosition();
-                        if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.SPECIMEN_POSITION) {
+                        depositV4B.setWristDropPosition();
+                        if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.DROP_POSITION) {
                             follower.followPath(scorePreload, true);
-                            setPathState(-1);
+                            setPathState(2);
                         }
                     }
                 }
@@ -136,8 +136,11 @@ public class autoDefault extends OpMode {
             case 2: // Pick first yellow sample
                 if (isWithinResolution(follower.getPose(), scorePose) &&
                         isStateReady(currentTime)) {
-                    follower.followPath(grabPickup1, true);
-                    setPathState(3);
+                    depositClaw.openDepositClaw();
+                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
+                        follower.followPath(grabPickup1, true);
+                        setPathState(-1);
+                    }
                 }
                 break;
 
@@ -210,7 +213,11 @@ public class autoDefault extends OpMode {
         follower.update();
         autonomousPathUpdate();
         depositSlide.update();
+        depositV4B.update();
+        depositClaw.update();
         intakeSlide.update();
+        intakeV4B.update();
+        intakeClaw.update();
 
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
