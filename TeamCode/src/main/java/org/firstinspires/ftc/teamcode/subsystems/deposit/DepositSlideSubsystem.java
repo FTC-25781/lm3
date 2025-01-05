@@ -22,9 +22,7 @@ public class DepositSlideSubsystem implements Subsystem {
     public DepositV4BSubsystem depositV4B;
     public UltrasonicDistanceSensor rangeSensor;
 
-    private static final int SLIDE_EXTEND_POS = 3500;
-    private static final int SLIDE_RETRACT_POS = 2000;
-    private static final int MAX_HEIGHT = 48;
+    private static final int MAX_HEIGHT = 44;
     private static final int V4B_HEIGHT = 22;
     private static final int RETRACT_HEIGHT = 18;
 
@@ -169,7 +167,7 @@ public class DepositSlideSubsystem implements Subsystem {
             default:
                 break;
         }
-        telemetry.addData("Current encode value: ", verticalSlideMotor.getCurrentPosition());
+        telemetry.addData("Current sensor value: ", rangeSensor.getDistance(DistanceUnit.INCH));
         telemetry.addData("current state: ", CURRENT_STATE.name() );
         telemetry.update();
     }

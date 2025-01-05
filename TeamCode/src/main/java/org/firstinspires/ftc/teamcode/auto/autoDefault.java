@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.auto;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.*;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
@@ -108,34 +109,49 @@ public class autoDefault extends OpMode {
         switch (pathState) {
             case 0:
                 if (isStateReady(currentTime)) {
-                    follower.followPath(slidesUp);
+                    follower.followPath(slidesUp, true);
                     setPathState(1);
                 }
                 break;
 
             case 1: // Score the preload
-                if (isStateReady(currentTime)) {
-                    follower.followPath(scorePreload);
-                    setPathState(2);
+                if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
+                    long stateStartTimeSlides = System.currentTimeMillis();
+
+                    depositSlide.extendDepositMainSlide();
+                    if (System.currentTimeMillis() - stateStartTime > 2000) {
+                        depositV4B.setWristDropPosition();
+                    }
+
+                    if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
+                        depositV4B.setWristSpecimenDropPosition();
+                        if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.SPECIMEN_POSITION) {
+                            follower.followPath(scorePreload, true);
+                            setPathState(-1);
+                        }
+                    }
                 }
                 break;
 
             case 2: // Pick first yellow sample
-                if (isWithinResolution(follower.getPose(), scorePose) && isStateReady(currentTime)) {
+                if (isWithinResolution(follower.getPose(), scorePose) &&
+                        isStateReady(currentTime)) {
                     follower.followPath(grabPickup1, true);
                     setPathState(3);
                 }
                 break;
 
             case 3:
-                if (isWithinResolution(follower.getPose(), pickup1Pose) && isStateReady(currentTime)) {
+                if (isWithinResolution(follower.getPose(), pickup1Pose) &&
+                        isStateReady(currentTime)) {
                     follower.followPath(slidesUpPick1, true);
                     setPathState(4);
                 }
                 break;
 
             case 4: // Score first yellow sample
-                if (isWithinResolution(follower.getPose(), pickup2Pose) && isStateReady(currentTime)) {
+                if (isWithinResolution(follower.getPose(), scoreSlidesPose) &&
+                        isStateReady(currentTime)) {
                     follower.followPath(scorePickup1, true);
                     setPathState(5);
                 }
@@ -156,7 +172,7 @@ public class autoDefault extends OpMode {
                 break;
 
             case 7: // Navigate to score position from second sample
-                if (isWithinResolution(follower.getPose(), pickup2Pose) && isStateReady(currentTime)) {
+                if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
                     follower.followPath(scorePickup2, true);
                     setPathState(8);
                 }
@@ -193,13 +209,14 @@ public class autoDefault extends OpMode {
     public void loop() {
         follower.update();
         autonomousPathUpdate();
-//        depositSlide.update();
-//        intakeSlide.update();
+        depositSlide.update();
+        intakeSlide.update();
 
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("Current sensor value: ", depositSlide.rangeSensor.getDistance(DistanceUnit.INCH));
         telemetry.update();
     }
 
