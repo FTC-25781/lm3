@@ -114,41 +114,50 @@ public class autoDefault extends OpMode {
                 }
                 break;
 
-            case 1: // Score the preload
+            case 1: // Score the preload (5 sec)
                 if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
-                    long stateStartTimeSlides = System.currentTimeMillis();
-                    depositClaw.closeDepositClaw();
-                    depositSlide.extendDepositMainSlide();
-                    if (System.currentTimeMillis() - stateStartTimeSlides > 2000) {
-                        depositV4B.setWristSpecimenDropPosition();
-                    }
+//                    long stateStartTimeSlides = System.currentTimeMillis();
+//                    depositClaw.closeDepositClaw();
+//                    depositSlide.extendDepositMainSlide();
+//                    if (System.currentTimeMillis() - stateStartTimeSlides > 2000) {
+//                        depositV4B.setWristSpecimenDropPosition();
+//                    }
 
-                    if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
-                        depositV4B.setWristDropPosition();
-                        if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.DROP_POSITION) {
-                            follower.followPath(scorePreload, true);
-                            setPathState(2);
-                        }
-                    }
+//                    if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
+                    //depositV4B.setWristDropPosition();
+                    follower.followPath(scorePreload, true);
+                    setPathState(2);
+//                    }
                 }
                 break;
 
-            case 2: // Pick first yellow sample
+            case 2:
                 if (isWithinResolution(follower.getPose(), scorePose) &&
                         isStateReady(currentTime)) {
-                    depositClaw.openDepositClaw();
-                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
-                        follower.followPath(grabPickup1, true);
-                        setPathState(-1);
-                    }
+//                    depositClaw.openDepositClaw();
+//                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
+                    follower.followPath(grabPickup1, true);
+                    setPathState(3);
+//                    }
                 }
                 break;
 
             case 3:
                 if (isWithinResolution(follower.getPose(), pickup1Pose) &&
                         isStateReady(currentTime)) {
-                    follower.followPath(slidesUpPick1, true);
-                    setPathState(4);
+                    long stateStartTimeRetract = System.currentTimeMillis();
+                    if (System.currentTimeMillis() - stateStartTimeRetract > 2000) {
+                        intakeClaw.orientationServo.setPosition(0);
+                        //depositSlide.retractDepositMainSlide();
+                        //depositV4B.setWristPickPosition();
+                        intakeV4B.setWristDefaultPosition();
+                        intakeSlide.extendMainSlide();
+                        if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED) {
+                            intakeV4B.setWristPickAutoPosition();
+                            follower.followPath(slidesUpPick1, true);
+                            setPathState(-1);
+                        }
+                    }
                 }
                 break;
 

@@ -18,7 +18,7 @@ public class IntakeSlideSubsystem {
     private final DigitalChannel intakeLimitSwitch;
     public final Telemetry telemetry;
 
-    private final int MAX_POS = 45;
+    private final double MAX_POS = 15.1;
     private final int MIN_POS = 8;
     private final int EXCHANGE_POS = 20; // TODO: find exchange value
 

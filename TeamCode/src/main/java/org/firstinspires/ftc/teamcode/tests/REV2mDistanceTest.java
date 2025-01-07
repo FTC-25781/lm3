@@ -23,13 +23,7 @@ public class REV2mDistanceTest extends LinearOpMode {
         waitForStart();
 
         while(opModeIsActive()) {
-            if (gamepad1.a) {
-                slides.extendMainSlide();
-            }
-
-            if (gamepad1.b) {
-                slides.retractMainSlide();
-            }
+            slides.slideMotor.setPower(gamepad1.left_stick_y);
 
             slides.update();
 

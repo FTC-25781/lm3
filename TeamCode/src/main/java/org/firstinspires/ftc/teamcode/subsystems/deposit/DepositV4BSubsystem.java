@@ -44,6 +44,7 @@ public class DepositV4BSubsystem implements Subsystem {
         setWristPosition(DROP, DROP);
         CURRENT_STATE = Depositv4b_state.DROP_POSITIONING;
         timer.reset();
+        timer.startTime();
         return null;
     }
 
@@ -51,6 +52,7 @@ public class DepositV4BSubsystem implements Subsystem {
         setWristPosition(PICKUP, PICKUP);
         CURRENT_STATE = Depositv4b_state.PICK_POSITIONING;
         timer.reset();
+        timer.startTime();
         return null;
     }
 
@@ -58,6 +60,7 @@ public class DepositV4BSubsystem implements Subsystem {
         setWristPosition(SPECIMEN_DROP, SPECIMEN_DROP);
         CURRENT_STATE = Depositv4b_state.SPECIMEN_POSITIONING;
         timer.reset();
+        timer.startTime();
         return null;
     }
 

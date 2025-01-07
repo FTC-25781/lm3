@@ -11,11 +11,10 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeSlideSubsystem;
 import java.util.concurrent.TimeUnit;
 
 public class DepositClawSubsystem implements Subsystem {
-
     public final Servo clawServo;
 
-    private static final double CLAW_OPEN_POS = 0.4;
-    private static final double CLAW_CLOSED_POS = 0.7;
+    private static final double CLAW_OPEN_POS = 0.6;
+    private static final double CLAW_CLOSED_POS = 0.9;
 
     public static enum DepositClaw_state {
         INITIALISED,

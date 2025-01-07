@@ -29,15 +29,15 @@ public class ServoTest extends LinearOpMode {
         intakeClawServo = hardwareMap.get(Servo.class, "clsrv"); //port 1
 //        depositClawServo = hardwareMap.get(Servo.class, "dclsrv"); //ex port 2
 
-        iservo1.setDirection(Servo.Direction.REVERSE);
+//        iservo1.setDirection(Servo.Direction.REVERSE);
         dservo1.setDirection(Servo.Direction.REVERSE);
 
         // Set initial positions
-        iservo1.setPosition(0.5);
-        iservo2.setPosition(0.5);
-        dservo1.setPosition(0.5);
-        dservo2.setPosition(0.5);
-        intakeClawServo.setPosition(0.5);
+//        iservo1.setPosition(0.5);
+//        iservo2.setPosition(0.5);
+//        dservo1.setPosition(0.5);
+//        dservo2.setPosition(0.5);
+//        intakeClawServo.setPosition(0.5);
 //        depositClawServo.setPosition(0.5);
 
         // Wait for the game to start
@@ -80,11 +80,11 @@ public class ServoTest extends LinearOpMode {
 //            }
 
             // Display servo positions on telemetry
-            telemetry.addData("Servo1 Position", iservo1.getPosition());
-            telemetry.addData("Servo2 Position", iservo2.getPosition());
+//            telemetry.addData("Servo1 Position", iservo1.getPosition());
+//            telemetry.addData("Servo2 Position", iservo2.getPosition());
             telemetry.addData("Deposit Servo1 Position", dservo1.getPosition());
             telemetry.addData("Deposit Servo2 Position", dservo2.getPosition());
-            telemetry.addData("Intake Claw Servo Position", intakeClawServo.getPosition());
+//            telemetry.addData("Intake Claw Servo Position", intakeClawServo.getPosition());
 //            telemetry.addData("Deposit Claw Servo Position", depositClawServo.getPosition());
             telemetry.update();
         }
