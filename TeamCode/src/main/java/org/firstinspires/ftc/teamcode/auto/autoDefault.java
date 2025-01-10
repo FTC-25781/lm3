@@ -3,8 +3,9 @@ package org.firstinspires.ftc.teamcode.auto;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.pedroPathing.follower.*;
+import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
@@ -12,7 +13,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
-
 import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositClawSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositSlideSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositV4BSubsystem;
@@ -32,7 +32,7 @@ public class autoDefault extends OpMode {
     public IntakeSlideSubsystem intakeSlide;
     public IntakeV4BSubsystem intakeV4B;
 
-    private int pathState=0;  // This is the variable where we store the state of our auto.
+    private int pathState = 0;  // This is the variable where we store the state of our auto.
 
     private final int RESOLUTION = 2; // Error of 2 inches
 
@@ -116,29 +116,29 @@ public class autoDefault extends OpMode {
 
             case 1: // Score the preload (5 sec)
                 if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
-//                    long stateStartTimeSlides = System.currentTimeMillis();
-//                    depositClaw.closeDepositClaw();
-//                    depositSlide.extendDepositMainSlide();
-//                    if (System.currentTimeMillis() - stateStartTimeSlides > 2000) {
-//                        depositV4B.setWristSpecimenDropPosition();
-//                    }
+                    long stateStartTimeSlides = System.currentTimeMillis();
+                    depositClaw.closeDepositClaw();
+                    depositSlide.extendDepositMainSlide();
+                    if (System.currentTimeMillis() - stateStartTimeSlides > 2000) {
+                        depositV4B.setWristSpecimenDropPosition();
+                    }
 
-//                    if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
-                    //depositV4B.setWristDropPosition();
-                    follower.followPath(scorePreload, true);
-                    setPathState(2);
-//                    }
+                    if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
+                        depositV4B.setWristDropPosition();
+                        follower.followPath(scorePreload, true);
+                        setPathState(2);
+                    }
                 }
                 break;
 
             case 2:
                 if (isWithinResolution(follower.getPose(), scorePose) &&
                         isStateReady(currentTime)) {
-//                    depositClaw.openDepositClaw();
-//                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
-                    follower.followPath(grabPickup1, true);
-                    setPathState(3);
-//                    }
+                    depositClaw.openDepositClaw();
+                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
+                        follower.followPath(grabPickup1, true);
+                        setPathState(3);
+                    }
                 }
                 break;
 
@@ -148,8 +148,8 @@ public class autoDefault extends OpMode {
                     long stateStartTimeRetract = System.currentTimeMillis();
                     if (System.currentTimeMillis() - stateStartTimeRetract > 2000) {
                         intakeClaw.orientationServo.setPosition(0);
-                        //depositSlide.retractDepositMainSlide();
-                        //depositV4B.setWristPickPosition();
+                        depositSlide.retractDepositMainSlide();
+                        depositV4B.setWristPickPosition();
                         intakeV4B.setWristDefaultPosition();
                         intakeSlide.extendMainSlide();
                         if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED) {
@@ -232,6 +232,8 @@ public class autoDefault extends OpMode {
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("Motor 1 Power Consumption: ", depositSlide.verticalSlideMotor.getCurrent(CurrentUnit.AMPS));
+        telemetry.addData("Motor 2 Power Consumption: ", depositSlide.verticalSlideMotor2.getCurrent(CurrentUnit.AMPS));
         telemetry.addData("Current sensor value: ", depositSlide.rangeSensor.getDistance(DistanceUnit.INCH));
         telemetry.update();
     }
