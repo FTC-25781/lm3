@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems.deposit;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -17,8 +18,8 @@ import java.util.concurrent.TimeUnit;
 public class DepositSlideSubsystem implements Subsystem {
 
     private final DigitalChannel depositLimitSwitch;
-    public final DcMotor verticalSlideMotor;
-    public final DcMotor verticalSlideMotor2;
+    public final DcMotorImplEx verticalSlideMotor;
+    public final DcMotorImplEx verticalSlideMotor2;
     public DepositV4BSubsystem depositV4B;
     public UltrasonicDistanceSensor rangeSensor;
 
@@ -48,8 +49,8 @@ public class DepositSlideSubsystem implements Subsystem {
 
         depositV4B = new DepositV4BSubsystem(hardwareMap);
 
-        verticalSlideMotor = hardwareMap.get(DcMotor.class, "vsmot");
-        verticalSlideMotor2 = hardwareMap.get(DcMotor.class, "vsmot2");
+        verticalSlideMotor = hardwareMap.get(DcMotorImplEx.class, "vsmot");
+        verticalSlideMotor2 = hardwareMap.get(DcMotorImplEx.class, "vsmot2");
         depositLimitSwitch = hardwareMap.get(DigitalChannel.class, "dpltsw");
         rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"));
 
@@ -66,11 +67,11 @@ public class DepositSlideSubsystem implements Subsystem {
     public void manualExtension(double power) {
         if (!depositLimitSwitch.getState() && power > 0) {
             // Block further extension when limit switch is pressed
-            verticalSlideMotor.setPower(0);
-            verticalSlideMotor2.setPower(0);
+            verticalSlideMotor.setPower(0.1);
+            verticalSlideMotor2.setPower(0.1);
         } else {
-            verticalSlideMotor.setPower(clampPower(power*-1));
-            verticalSlideMotor2.setPower(clampPower(power*-1));
+            verticalSlideMotor.setPower(clampPower(power*-0.8));
+            verticalSlideMotor2.setPower(clampPower(power*-0.8));
         }
     }
 
@@ -129,8 +130,8 @@ public class DepositSlideSubsystem implements Subsystem {
                     telemetry.update();
                 }
                 else {
-                    verticalSlideMotor.setPower(0);
-                    verticalSlideMotor2.setPower(0);
+                    verticalSlideMotor.setPower(0.1);
+                    verticalSlideMotor2.setPower(0.1);
                     CURRENT_STATE = Deposit_state.EXTENDED;
                 }
 

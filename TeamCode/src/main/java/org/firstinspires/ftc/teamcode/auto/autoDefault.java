@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -20,6 +21,8 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeClawSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeSlideSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeV4BSubsystem;
 
+import java.util.concurrent.TimeUnit;
+
 @Autonomous(name = "Example Auto Blue", group = "Examples")
 public class autoDefault extends OpMode {
     private Follower follower;
@@ -31,6 +34,8 @@ public class autoDefault extends OpMode {
     public IntakeClawSubsystem intakeClaw;
     public IntakeSlideSubsystem intakeSlide;
     public IntakeV4BSubsystem intakeV4B;
+
+    public ElapsedTime timers;
 
     private int pathState = 0;  // This is the variable where we store the state of our auto.
 
@@ -119,7 +124,7 @@ public class autoDefault extends OpMode {
                     long stateStartTimeSlides = System.currentTimeMillis();
                     depositClaw.closeDepositClaw();
                     depositSlide.extendDepositMainSlide();
-                    if (System.currentTimeMillis() - stateStartTimeSlides > 2000) {
+                    if (System.currentTimeMillis() - stateStartTimeSlides > 1000) {
                         depositV4B.setWristSpecimenDropPosition();
                     }
 
@@ -127,13 +132,15 @@ public class autoDefault extends OpMode {
                         depositV4B.setWristDropPosition();
                         follower.followPath(scorePreload, true);
                         setPathState(2);
+                        timers.reset();
+                        timers.startTime();
                     }
                 }
                 break;
 
             case 2:
                 if (isWithinResolution(follower.getPose(), scorePose) &&
-                        isStateReady(currentTime)) {
+                        isStateReady(currentTime) && timers.time(TimeUnit.MILLISECONDS) > 1000) {
                     depositClaw.openDepositClaw();
                     if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
                         follower.followPath(grabPickup1, true);
@@ -155,7 +162,7 @@ public class autoDefault extends OpMode {
                         if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED) {
                             intakeV4B.setWristPickAutoPosition();
                             follower.followPath(slidesUpPick1, true);
-                            setPathState(-1);
+                            setPathState(4);
                         }
                     }
                 }
@@ -255,6 +262,7 @@ public class autoDefault extends OpMode {
         intakeSlide = new IntakeSlideSubsystem(hardwareMap, telemetry);
         intakeV4B = new IntakeV4BSubsystem(hardwareMap);
 
+        ElapsedTime timers = new ElapsedTime();
         buildPaths();
     }
 

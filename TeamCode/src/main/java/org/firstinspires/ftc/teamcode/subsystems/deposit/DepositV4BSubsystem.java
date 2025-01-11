@@ -15,7 +15,7 @@ public class DepositV4BSubsystem implements Subsystem {
 
     private static final double SPECIMEN_DROP = 1.0;
     private static final double DROP = 0.0;
-    private static final double PICKUP = 0.73;
+    private static final double PICKUP = 0.64;
     public static enum Depositv4b_state {
         INITIALISED,
         UNINITIALISED,
