@@ -35,8 +35,6 @@ public class autoDefault extends OpMode {
     public IntakeSlideSubsystem intakeSlide;
     public IntakeV4BSubsystem intakeV4B;
 
-
-
     private int pathState = 0;  // This is the variable where we store the state of our auto.
 
     private final int RESOLUTION = 2; // Error of 2 inches
@@ -125,16 +123,19 @@ public class autoDefault extends OpMode {
                     long stateStartTimeSlides = System.currentTimeMillis();
                     depositClaw.closeDepositClaw();
                     depositSlide.extendDepositMainSlide();
-                    if (System.currentTimeMillis() - stateStartTimeSlides > 1000) {
+                    if ((System.currentTimeMillis() - stateStartTimeSlides) > 2000) {
                         depositV4B.setWristSpecimenDropPosition();
                     }
 
                     if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
                         depositV4B.setWristDropPosition();
-                        follower.followPath(scorePreload, true);
-                        setPathState(2);
-                        timers.reset();
-                        timers.startTime();
+                        // Make sure wrist is in drop before next step
+                        if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.DROP_POSITION) {
+                            follower.followPath(scorePreload, true);
+                            setPathState(2);
+                            timers.reset();
+                            timers.startTime();
+                        }
                     }
                 }
                 break;
@@ -155,7 +156,7 @@ public class autoDefault extends OpMode {
                         isStateReady(currentTime)) {
                     long stateStartTimeRetract = System.currentTimeMillis();
                     if (System.currentTimeMillis() - stateStartTimeRetract > 2000) {
-                        intakeClaw.orientationServo.setPosition(0);
+                        intakeClaw.orientationServo.setPosition(0.0);
                         depositSlide.retractDepositMainSlide();
                         depositV4B.setWristPickPosition();
                         intakeV4B.setWristDefaultPosition();
@@ -229,6 +230,7 @@ public class autoDefault extends OpMode {
     public void loop() {
         follower.update();
         autonomousPathUpdate();
+
         depositSlide.update();
         depositV4B.update();
         depositClaw.update();

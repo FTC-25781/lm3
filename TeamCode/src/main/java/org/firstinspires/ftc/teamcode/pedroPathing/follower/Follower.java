@@ -585,8 +585,14 @@ public class Follower {
      *                     movement, this is the y-axis.
      * @param heading      determines the heading vector for the robot in teleop.
      */
-    public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading) {
-        setTeleOpMovementVectors(forwardDrive, lateralDrive, heading, true);
+    public void setTeleOpMovementVectors(Float forwardDrive, Float lateralDrive, Float heading) {
+        // Provide default values if any of the inputs are null
+        double safeForwardDrive = (forwardDrive != null) ? forwardDrive : 0.0;
+        double safeLateralDrive = (lateralDrive != null) ? lateralDrive : 0.0;
+        double safeHeading = (heading != null) ? heading : 0.0;
+
+        // Call the other method with non-null values
+        setTeleOpMovementVectors(safeForwardDrive, safeLateralDrive, safeHeading, true);
     }
 
     /**
