@@ -35,7 +35,7 @@ public class autoDefault extends OpMode {
     public IntakeSlideSubsystem intakeSlide;
     public IntakeV4BSubsystem intakeV4B;
 
-    public ElapsedTime timers;
+
 
     private int pathState = 0;  // This is the variable where we store the state of our auto.
 
@@ -51,6 +51,7 @@ public class autoDefault extends OpMode {
     private final Pose parkControlPose = new Pose(60, 98, Math.toRadians(90));
     private Path park;
     private PathChain slidesUp, scorePreload, grabPickup1, slidesUpPick1, grabPickup2, slidesUpPick2, scorePickup1, scorePickup2, scorePickup3;
+    ElapsedTime timers = new ElapsedTime();
 
     // Build the paths for the auto
     public void buildPaths() {
@@ -262,7 +263,6 @@ public class autoDefault extends OpMode {
         intakeSlide = new IntakeSlideSubsystem(hardwareMap, telemetry);
         intakeV4B = new IntakeV4BSubsystem(hardwareMap);
 
-        ElapsedTime timers = new ElapsedTime();
         buildPaths();
     }
 
