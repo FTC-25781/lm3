@@ -11,15 +11,13 @@ public class PIDMotorTest extends LinearOpMode {
     private DcMotorEx pidMotor;
 
     // pid values
-    private final double Kp = 0;
-    private final double Ki = 0;
-    private final double Kd = 0;
+    private double Kp = 0; //put values here when sarcs slide bot is made
+    private double Kd = 0; //put values here when sarcs slide bot is made
 
     // variables
-    private final double setPoint = 0;
-    private double lastError = 0;
-    private double integralSum = 0;
-    private long lastTime = 0;
+    private double setPoint = 0; //put values here when sarcs slide bot is made
+    private double lastError = 0; //put values here when sarcs slide bot is made
+    private long lastTime = 0; //put values here when sarcs slide bot is made
 
     @Override
     public void runOpMode() {
@@ -36,6 +34,7 @@ public class PIDMotorTest extends LinearOpMode {
 
             pidMotor.setPower(power);
 
+            //telemetry
             telemetry.addData("Target Position", setPoint);
             telemetry.addData("Current Position", pidMotor.getCurrentPosition());
             telemetry.addData("Power", power);
@@ -46,7 +45,7 @@ public class PIDMotorTest extends LinearOpMode {
     private double determinePID(double target, double current) {
         long currentTime = System.currentTimeMillis();
         double deltaTime = (currentTime - lastTime) / 1000.0;  // Convert to seconds
-        lastTime = currentTime;
+//      lastTime = currentTime;  (ASK COACH)
 
         double error = target - current;
 
@@ -54,13 +53,9 @@ public class PIDMotorTest extends LinearOpMode {
         double proportional = Kp * error;
 
 
-        integralSum += error * deltaTime;
-        double integral = Ki * integralSum;
-
-
         double derivative = Kd * (error - lastError) / deltaTime;
         lastError = error;
 
-        return proportional + integral + derivative;
+        return proportional + derivative;
     }
 }
