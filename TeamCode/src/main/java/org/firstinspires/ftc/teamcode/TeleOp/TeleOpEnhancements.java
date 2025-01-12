@@ -50,7 +50,7 @@ public class TeleOpEnhancements extends OpMode {
 
         depositClaw = new DepositClawSubsystem(hardwareMap);
         depositSlide = new DepositSlideSubsystem(hardwareMap, telemetry);
-        depositV4B = new DepositV4BSubsystem(hardwareMap);
+        depositV4B = new DepositV4BSubsystem(hardwareMap, telemetry);
         intakeClaw = new IntakeClawSubsystem(hardwareMap);
         intakeSlide = new IntakeSlideSubsystem(hardwareMap, telemetry);
         intakeV4B = new IntakeV4BSubsystem(hardwareMap);

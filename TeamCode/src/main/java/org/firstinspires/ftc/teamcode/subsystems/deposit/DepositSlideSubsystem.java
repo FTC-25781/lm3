@@ -47,7 +47,7 @@ public class DepositSlideSubsystem implements Subsystem {
     public DepositSlideSubsystem(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
-        depositV4B = new DepositV4BSubsystem(hardwareMap);
+        depositV4B = new DepositV4BSubsystem(hardwareMap, telemetry);
 
         verticalSlideMotor = hardwareMap.get(DcMotorImplEx.class, "vsmot");
         verticalSlideMotor2 = hardwareMap.get(DcMotorImplEx.class, "vsmot2");
@@ -64,8 +64,9 @@ public class DepositSlideSubsystem implements Subsystem {
         CURRENT_STATE = Deposit_state.INITIALISED;
     }
 
+    // Gamepad slides go up
     public void manualExtension(double power) {
-        if (!depositLimitSwitch.getState() && power > 0) {
+        if (!depositLimitSwitch.getState())  {
             // Block further extension when limit switch is pressed
             verticalSlideMotor.setPower(0.1);
             verticalSlideMotor2.setPower(0.1);
@@ -75,6 +76,7 @@ public class DepositSlideSubsystem implements Subsystem {
         }
     }
 
+    // auto get slides up
     public Runnable extendDepositMainSlide() {
         if(CURRENT_STATE== DepositSlideSubsystem.Deposit_state.EXTENDING ||
         CURRENT_STATE == Deposit_state.EXTENDED)
@@ -85,12 +87,13 @@ public class DepositSlideSubsystem implements Subsystem {
             return null;
         }
 
-        verticalSlideMotor.setPower(1);
-        verticalSlideMotor2.setPower(1);
+        verticalSlideMotor.setPower(0.8);
+        verticalSlideMotor2.setPower(0.8);
         CURRENT_STATE = Deposit_state.EXTENDING;
         return null;
     }
 
+    // auto retract slides
     public Runnable retractDepositMainSlide() {
         //ToDo: Check is already at or below retract position if so return null.
         if (rangeSensor.getDistance(DistanceUnit.INCH) <= RETRACT_HEIGHT) {
@@ -104,22 +107,8 @@ public class DepositSlideSubsystem implements Subsystem {
         return null;
     }
 
-
-    public void stopSlides() {
-        verticalSlideMotor.setPower(0);
-        verticalSlideMotor2.setPower(0);
-        verticalSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        verticalSlideMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        verticalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        verticalSlideMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
     private double clampPower(double power) {
         return Math.max(-1.0, Math.min(1.0, power));
-    }
-
-    public boolean isLimitSwitchPressed() {
-        return !depositLimitSwitch.getState();
     }
 
     public void update() {
@@ -130,24 +119,24 @@ public class DepositSlideSubsystem implements Subsystem {
                     telemetry.update();
                 }
                 else {
-                    verticalSlideMotor.setPower(0.1);
-                    verticalSlideMotor2.setPower(0.1);
+                    verticalSlideMotor.setPower(0.2);
+                    verticalSlideMotor2.setPower(0.2);
                     CURRENT_STATE = Deposit_state.EXTENDED;
                 }
-
-                if (rangeSensor.getDistance(DistanceUnit.INCH) > V4B_HEIGHT ) {
-                    depositV4B.setWristSpecimenDropPosition();
-                }
+//
+//                if (rangeSensor.getDistance(DistanceUnit.INCH) > V4B_HEIGHT) {
+//                    depositV4B.setWristSpecimenDropPosition();
+//                }
 
                 break;
             case RETRACTING:
-                if (rangeSensor.getDistance(DistanceUnit.INCH) > RETRACT_HEIGHT) {
+                if (rangeSensor.getDistance(DistanceUnit.INCH) < RETRACT_HEIGHT) {
                     telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
                     telemetry.update();
                 }
                 else {
-                    verticalSlideMotor.setPower(0);
-                    verticalSlideMotor2.setPower(0);
+                    verticalSlideMotor.setPower(0.2);
+                    verticalSlideMotor2.setPower(0.2);
                     CURRENT_STATE = Deposit_state.RETRACTED;
                 }
                 break;
@@ -168,8 +157,5 @@ public class DepositSlideSubsystem implements Subsystem {
             default:
                 break;
         }
-        telemetry.addData("Current sensor value: ", rangeSensor.getDistance(DistanceUnit.INCH));
-        telemetry.addData("current state: ", CURRENT_STATE.name() );
-        telemetry.update();
     }
 }

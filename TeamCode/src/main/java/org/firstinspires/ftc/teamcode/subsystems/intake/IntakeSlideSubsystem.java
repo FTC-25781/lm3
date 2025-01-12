@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class IntakeSlideSubsystem {
 
     public final DcMotor slideMotor;
-    private final DistanceSensor sensorDistance;
+    public final DistanceSensor sensorDistance;
     private final DigitalChannel intakeLimitSwitch;
     public final Telemetry telemetry;
 
@@ -127,9 +127,5 @@ public class IntakeSlideSubsystem {
                 break;
         }
 
-        telemetry.addData("range", String.format("%.01f cm", sensorDistance.getDistance(DistanceUnit.CM)));
-        telemetry.addData("Current encoder value: ", slideMotor.getCurrentPosition());
-        telemetry.addData("current state: ", CURRENT_STATE.name());
-        telemetry.update();
     }
 }

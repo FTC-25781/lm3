@@ -17,8 +17,8 @@ public class IntakeV4BSubsystem {
     private static final int DELAY_MS = 20; // Delay between increments
 
     private static final double DEFAULT = 0.15;
-    private static final double DROP = 0.34;
-    private static final double PICKUP = 0;
+    private static final double DROP = 0.4;
+    private static final double PICKUP = 0.05;
     private static final double AUTO_PICKUP = 0.07;
 
     public static enum Intakev4b_state {

@@ -107,6 +107,92 @@ public class autoDefault extends OpMode {
                 Math.abs(currentPose.getY() - targetPose.getY()) <= RESOLUTION;
     }
 
+    private void pickSample() {
+        intakeClaw.orientationServo.setPosition(0.0);
+
+        depositSlide.retractDepositMainSlide();
+
+        if (depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITION &&
+                depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITIONING) {
+            depositV4B.setWristPickPosition();
+        }
+
+        if (intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITION &&
+                intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITIONING) {
+            intakeV4B.setWristDefaultPosition();
+        }
+
+        if (intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDED &&
+                intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDING) {
+            intakeSlide.extendMainSlide();
+        }
+
+        if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED &&
+                intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.PICK_POSITION &&
+                intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.PICK_POSITIONING) {
+            intakeV4B.setWristPickPosition();
+        }
+
+
+        if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.PICK_POSITION &&
+                intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENING) {
+            intakeClaw.openClaw();
+        }
+
+        if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
+                intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSING) {
+            intakeClaw.closeClaw();
+        }
+
+        if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
+                intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION &&
+                intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITIONING) {
+            intakeV4B.setWristDropPosition();
+        }
+    }
+
+    private void scoreSample() {
+        intakeSlide.retractMainSlide();
+
+        if (depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENED &&
+                depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENING) {
+            depositClaw.openDepositClaw();
+        }
+
+        long stateStartTimeSlides = System.currentTimeMillis();
+        if (depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSED &&
+                depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSING)
+        {
+            depositClaw.closeDepositClaw();
+        }
+
+        if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.CLOSED) {
+            depositSlide.extendDepositMainSlide();
+        }
+
+        // if time is more that 1 sec since we enter this state raise deposit arm
+        if ((System.currentTimeMillis() - stateStartTimeSlides) > 1000) {
+            depositV4B.setWristSpecimenDropPosition();
+        }
+
+        //when slides are extended bring the deposit arm to drop position
+        if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED &&
+                depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITIONING &&
+                depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITION)
+        {
+            depositV4B.setWristDropPosition();
+        }
+
+        // Make sure wrist is in drop before next step
+        if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.DROP_POSITION &&
+                depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENING &&
+                depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENED) {
+            depositClaw.openDepositClaw();
+        }
+    }
+
     public void autonomousPathUpdate() {
         long currentTime = System.currentTimeMillis(); // Get the current time
 
@@ -119,62 +205,127 @@ public class autoDefault extends OpMode {
                 break;
 
             case 1: // Score the preload (5 sec)
+                // check if we are at score slide position and is time passed from than 1 sec since last run
                 if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
+                    // get current time to compare later for lifting deposit arm after one sec
                     long stateStartTimeSlides = System.currentTimeMillis();
-                    depositClaw.closeDepositClaw();
-                    depositSlide.extendDepositMainSlide();
-                    if ((System.currentTimeMillis() - stateStartTimeSlides) > 2000) {
+
+                    if (depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSED &&
+                        depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSING)
+                    {
+                        depositClaw.closeDepositClaw();
+                    }
+
+                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.CLOSED) {
+                        depositSlide.extendDepositMainSlide();
+                    }
+
+                    // if time is more that 1 sec since we enter this state raise deposit arm
+                    if ((System.currentTimeMillis() - stateStartTimeSlides) > 1000) {
                         depositV4B.setWristSpecimenDropPosition();
                     }
 
-                    if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED) {
+                    //when slides are extended bring the deposit arm to drop position
+                    if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED &&
+                        depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITIONING &&
+                        depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITION) {
                         depositV4B.setWristDropPosition();
-                        // Make sure wrist is in drop before next step
-                        if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.DROP_POSITION) {
-                            follower.followPath(scorePreload, true);
-                            setPathState(2);
-                            timers.reset();
-                            timers.startTime();
-                        }
+                    }
+
+                    // Make sure wrist is in drop before next step
+                    if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.DROP_POSITION) {
+                        follower.followPath(scorePreload, true);
+                        setPathState(2);
                     }
                 }
                 break;
 
-            case 2:
+            case 2: // we are at score position with slide up and deposit arm at drop level
                 if (isWithinResolution(follower.getPose(), scorePose) &&
-                        isStateReady(currentTime) && timers.time(TimeUnit.MILLISECONDS) > 1000) {
-                    depositClaw.openDepositClaw();
+                        isStateReady(currentTime)) {
+
+                    // open the drop claw
+                    if (depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENED &&
+                        depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENING) {
+                        depositClaw.openDepositClaw();
+                    }
+
+                    // once claw is open move to grab pick position
                     if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
+                        // goto grab pick position
                         follower.followPath(grabPickup1, true);
                         setPathState(3);
                     }
                 }
                 break;
 
-            case 3:
-                if (isWithinResolution(follower.getPose(), pickup1Pose) &&
-                        isStateReady(currentTime)) {
-                    long stateStartTimeRetract = System.currentTimeMillis();
-                    if (System.currentTimeMillis() - stateStartTimeRetract > 2000) {
-                        intakeClaw.orientationServo.setPosition(0.0);
-                        depositSlide.retractDepositMainSlide();
+            case 3: // we at grab first pick position
+                if (isWithinResolution(follower.getPose(), pickup1Pose) && isStateReady(currentTime)) {
+                    // pick orientation
+                    intakeClaw.orientationServo.setPosition(0.0);
+
+                    long stateStartTimeSlides = 0;
+                    // move deposit arm to pick position
+                    if (depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITION &&
+                            depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITIONING) {
                         depositV4B.setWristPickPosition();
-                        intakeV4B.setWristDefaultPosition();
-                        intakeSlide.extendMainSlide();
-                        if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED) {
-                            intakeV4B.setWristPickAutoPosition();
-                            follower.followPath(slidesUpPick1, true);
-                            setPathState(4);
-                        }
+                        stateStartTimeSlides = System.currentTimeMillis();
                     }
+
+                    if ((System.currentTimeMillis() - stateStartTimeSlides) > 1000) {
+                        depositSlide.retractDepositMainSlide();
+                    }
+
+                    if (intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITION &&
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITIONING) {
+                        intakeV4B.setWristDefaultPosition();
+                    }
+
+                    if (intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDED &&
+                            intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDING) {
+                        intakeSlide.extendMainSlide();
+                    }
+
+                    if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED &&
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.PICK_POSITION &&
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.PICK_POSITIONING) {
+                        intakeV4B.setWristPickPosition();
+                    }
+
+
+                    if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.PICK_POSITION &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENING) {
+                        intakeClaw.openClaw();
+                    }
+
+                    if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSING) {
+                        intakeClaw.closeClaw();
+                    }
+
+                    if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION &&
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITIONING) {
+                        intakeV4B.setWristDropPosition();
+                    }
+
+                    if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION) {
+                        follower.followPath(slidesUpPick1, true);
+                        setPathState(4);
+                    }
+
                 }
                 break;
 
             case 4: // Score first yellow sample
-                if (isWithinResolution(follower.getPose(), scoreSlidesPose) &&
-                        isStateReady(currentTime)) {
-                    follower.followPath(scorePickup1, true);
-                    setPathState(5);
+                if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
+                    scoreSample();
+                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
+                        follower.followPath(scorePickup1, true);
+                        setPathState(5);
+                    }
                 }
                 break;
 
@@ -226,6 +377,7 @@ public class autoDefault extends OpMode {
         stateStartTime = System.currentTimeMillis();
     }
 
+
     @Override
     public void loop() {
         follower.update();
@@ -238,13 +390,27 @@ public class autoDefault extends OpMode {
         intakeV4B.update();
         intakeClaw.update();
 
+        // Deposit
+        telemetry.addData("deposit claw current state: ",  depositClaw.CURRENT_STATE.name());
+        telemetry.addData("deposit ARM current state: ",   depositV4B.CURRENT_STATE.name());
+        telemetry.addData("deposit slide current state: ", depositSlide.CURRENT_STATE.name());
+        telemetry.addData("Deposit timer: ",               depositV4B.depostTimerDiff);
+        telemetry.addData("Vertical height(inch): ",       depositSlide.rangeSensor.getDistance(DistanceUnit.INCH));
+
+        telemetry.addData("Motor 1 Power Consumption: ", depositSlide.verticalSlideMotor.getCurrent(CurrentUnit.AMPS));
+        telemetry.addData("Motor 2 Power Consumption: ", depositSlide.verticalSlideMotor2.getCurrent(CurrentUnit.AMPS));
+
+        // intake
+        telemetry.addData("Intake Claw current state: ",   intakeClaw.CURRENT_STATE.name());
+        telemetry.addData("Intake ARM current state: ", intakeV4B.CURRENT_STATE.name());
+        telemetry.addData("Intake slide current state: ",  intakeSlide.CURRENT_STATE.name());
+        telemetry.addData("Horizontal range",              intakeSlide.sensorDistance.getDistance(DistanceUnit.CM));
+
+        //follower
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.addData("Motor 1 Power Consumption: ", depositSlide.verticalSlideMotor.getCurrent(CurrentUnit.AMPS));
-        telemetry.addData("Motor 2 Power Consumption: ", depositSlide.verticalSlideMotor2.getCurrent(CurrentUnit.AMPS));
-        telemetry.addData("Current sensor value: ", depositSlide.rangeSensor.getDistance(DistanceUnit.INCH));
+        telemetry.addData("heading", follower.getPose().getHeading());;
         telemetry.update();
     }
 
@@ -260,7 +426,7 @@ public class autoDefault extends OpMode {
         // Initialize subsystems
         depositClaw = new DepositClawSubsystem(hardwareMap);
         depositSlide = new DepositSlideSubsystem(hardwareMap, telemetry);
-        depositV4B = new DepositV4BSubsystem(hardwareMap);
+        depositV4B = new DepositV4BSubsystem(hardwareMap, telemetry);
         intakeClaw = new IntakeClawSubsystem(hardwareMap);
         intakeSlide = new IntakeSlideSubsystem(hardwareMap, telemetry);
         intakeV4B = new IntakeV4BSubsystem(hardwareMap);

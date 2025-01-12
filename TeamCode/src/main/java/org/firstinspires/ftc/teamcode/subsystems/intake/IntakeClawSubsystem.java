@@ -25,7 +25,7 @@ public class IntakeClawSubsystem {
         STOPPED
     }
 
-    ElapsedTime timer = new ElapsedTime();
+    private final ElapsedTime timer = new ElapsedTime();
 
     public IntakeClawSubsystem.IntakeClaw_state CURRENT_STATE = IntakeClawSubsystem.IntakeClaw_state.UNINITIALISED;
 
@@ -50,7 +50,7 @@ public class IntakeClawSubsystem {
         if (currentOrientation < 90.0) {
             currentOrientation += 10.0;
             double servoPosition = currentOrientation / 180.0;
-            orientationServo.setPosition(orientationClamp(servoPosition));
+            orientationServo.setPosition(servoPosition);
         }
     }
 
@@ -58,7 +58,7 @@ public class IntakeClawSubsystem {
         if (currentOrientation > 0) {
             currentOrientation -= 10.0;
             double servoPosition = currentOrientation / 180.0;
-            orientationServo.setPosition(orientationClamp(servoPosition));
+            orientationServo.setPosition(servoPosition);
         }
     }
 
@@ -67,6 +67,7 @@ public class IntakeClawSubsystem {
         clawServo.setPosition(CLAW_OPEN_POS);
         CURRENT_STATE = IntakeClaw_state.OPENING;
         timer.reset();
+        timer.startTime();
         return null;
     }
 
@@ -75,6 +76,7 @@ public class IntakeClawSubsystem {
         clawServo.setPosition(CLAW_CLOSED_POS);
         CURRENT_STATE = IntakeClaw_state.CLOSING;
         timer.reset();
+        timer.startTime();
         return null;
     }
 
