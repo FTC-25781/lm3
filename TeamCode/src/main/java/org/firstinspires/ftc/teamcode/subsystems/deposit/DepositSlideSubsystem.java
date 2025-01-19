@@ -23,9 +23,9 @@ public class DepositSlideSubsystem implements Subsystem {
     public DepositV4BSubsystem depositV4B;
     public UltrasonicDistanceSensor rangeSensor;
 
-    private static final int MAX_HEIGHT = 44;
+    private static final int MAX_HEIGHT = 42;
     private static final int V4B_HEIGHT = 22;
-    private static final int RETRACT_HEIGHT = 18;
+    private static final int RETRACT_HEIGHT = 9;
 
 
     public static enum Deposit_state {
@@ -100,8 +100,8 @@ public class DepositSlideSubsystem implements Subsystem {
             return null;
         }
 
-        verticalSlideMotor.setPower(-1);
-        verticalSlideMotor2.setPower(-1);
+        verticalSlideMotor.setPower(-0.6);
+        verticalSlideMotor2.setPower(-0.6);
         // ToDo: set the state
         CURRENT_STATE = Deposit_state.RETRACTING;
         return null;
