@@ -49,21 +49,24 @@ public class IntakeV4BSubsystem {
     }
 
     public Runnable setWristDropPosition() {
-        smoothSetWristPosition(DROP, DROP);
+        wristServo1.setPosition(DROP);
+        wristServo1.setPosition(DROP);
         CURRENT_STATE = Intakev4b_state.DROP_POSITIONING;
         timer.reset();
         return null;
     }
 
     public Runnable setWristDefaultPosition() {
-        smoothSetWristPosition(DEFAULT, DEFAULT);
+        wristServo1.setPosition(DEFAULT);
+        wristServo1.setPosition(DEFAULT);
         CURRENT_STATE = Intakev4b_state.DEFAULT_POSITIONING;
         timer.reset();
         return null;
     }
 
     public Runnable setWristPickPosition() {
-        smoothSetWristPosition(PICKUP, PICKUP);
+        wristServo1.setPosition(PICKUP);
+        wristServo1.setPosition(PICKUP);
         CURRENT_STATE = Intakev4b_state.PICK_POSITIONING;
         timer.reset();
         return null;

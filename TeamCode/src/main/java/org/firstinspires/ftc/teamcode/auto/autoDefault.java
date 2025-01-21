@@ -49,7 +49,7 @@ public class autoDefault extends OpMode {
     private final Pose startPose = new Pose(9, 111, Math.toRadians(270));
     private final Pose scorePose = new Pose(10, 132, Math.toRadians(315));
     private final Pose scoreSlidesPose = new Pose(16, 126, Math.toRadians(315));
-    private final Pose pickup1Pose = new Pose(23, 121, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(15.9, 123, Math.toRadians(0));
     private final Pose pickup2Pose = new Pose(24, 129, Math.toRadians(0));
     private final Pose parkPose = new Pose(60, 98, Math.toRadians(90));
     private final Pose parkControlPose = new Pose(60, 98, Math.toRadians(90));
@@ -234,15 +234,6 @@ public class autoDefault extends OpMode {
                         depositSlide.extendDepositMainSlide();
                     }
 
-                    // if time is more that 1 sec since we enter this state raise deposit arm
-                    if (depositV4B .CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.SPECIMEN_POSITION &&
-                        depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.SPECIMEN_POSITIONING &&
-                        depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITIONING &&
-                        depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITION &&
-                        (System.currentTimeMillis() - stateStartTimeSlides) > 1000) {
-                        depositV4B.setWristSpecimenDropPosition();
-                    }
-
                     //when slides are extended bring the deposit arm to drop position
                     if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED &&
                         depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITIONING &&
@@ -268,7 +259,7 @@ public class autoDefault extends OpMode {
                     }
 
                     // open the drop claw
-                    if ((System.currentTimeMillis() - stateStartTimeSlides2) > 1500 &&
+                    if ((System.currentTimeMillis() - stateStartTimeSlides2) > 1000 &&
                         depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENED &&
                         depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENING) {
                         depositClaw.openDepositClaw();
@@ -277,8 +268,8 @@ public class autoDefault extends OpMode {
                     // once claw is open move to grab pick position
                     if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED) {
                         // goto grab pick position
-                        // follower.followPath(grabPickup1, true);
-                        setPathState(8);
+                        follower.followPath(grabPickup1, true);
+                        setPathState(3);
                     }
                 }
                 break;
@@ -312,14 +303,16 @@ public class autoDefault extends OpMode {
 
                     if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.RETRACTED &&
                         depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACTING) {
-                        if (intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITION &&
-                                intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITIONING) {
-                            intakeV4B.setWristDefaultPosition();
-                        }
 
                         if (intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDED &&
                                 intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDING) {
                             intakeSlide.extendMainSlide();
+                        }
+
+                        if ( intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDING &&
+                                intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITION &&
+                                intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITIONING) {
+                            intakeV4B.setWristDefaultPosition();
                         }
 
                         if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED &&
@@ -350,7 +343,7 @@ public class autoDefault extends OpMode {
 
                     if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION) {
                         follower.followPath(slidesUpPick1, true);
-                        setPathState(4);
+                        setPathState(-1);
                     }
 
                 }
@@ -366,35 +359,14 @@ public class autoDefault extends OpMode {
                 }
                 break;
 
-            case 5: // Navigate to pick second yellow sample
+            case 5:
                 if (isWithinResolution(follower.getPose(), scorePose) && isStateReady(currentTime)) {
-                    follower.followPath(grabPickup2, true);
+                    follower.followPath(park, true);
                     setPathState(6);
                 }
                 break;
 
             case 6:
-                if (isWithinResolution(follower.getPose(), pickup2Pose) && isStateReady(currentTime)) {
-                    follower.followPath(slidesUpPick2, true);
-                    setPathState(7);
-                }
-                break;
-
-            case 7: // Navigate to score position from second sample
-                if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
-                    follower.followPath(scorePickup2, true);
-                    setPathState(8);
-                }
-                break;
-
-            case 8:
-                if (isWithinResolution(follower.getPose(), scorePose) && isStateReady(currentTime)) {
-                    follower.followPath(park, true);
-                    setPathState(9);
-                }
-                break;
-
-            case 9:
                 if (isWithinResolution(follower.getPose(), parkPose) && isStateReady(currentTime)) {
                     setPathState(-1); // End state
                 }
