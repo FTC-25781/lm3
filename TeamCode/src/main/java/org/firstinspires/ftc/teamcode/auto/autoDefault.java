@@ -328,17 +328,17 @@ public class autoDefault extends OpMode {
                             intakeClaw.openClaw();
                         }
 
-                        if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.OPENED &&
-                                intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
-                                intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSING) {
-                            intakeClaw.closeClaw();
                         }
 
-                        if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
+                        if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.OPENED &&
                                 intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION &&
                                 intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITIONING) {
                             intakeV4B.setWristDropPosition();
                         }
+                    if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.DEFAULT_POSITION &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSING) {
+                        intakeClaw.closeClaw();
                     }
 
                     if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION) {
