@@ -279,15 +279,15 @@ public class autoDefault extends OpMode {
                     // pick orientation
                     intakeClaw.orientationServo.setPosition(0.0);
 
-                    if (!retractSlides) {
-                        retractSlides = true;
-                        isTimeSet = false;
-                    }
-
-                    if (retractSlides && !isTimeSet) {
-                        retractTimer = System.currentTimeMillis();;
-                        isTimeSet = true;
-                    }
+//                    if (!retractSlides) {
+//                        retractSlides = true;
+//                        isTimeSet = false;
+//                    }
+//
+//                    if (retractSlides && !isTimeSet) {
+//                        retractTimer = System.currentTimeMillis();;
+//                        isTimeSet = true;
+//                    }
 
                     // move deposit arm to pick position
                     if (depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITION &&
@@ -296,8 +296,8 @@ public class autoDefault extends OpMode {
                     }
 
                     if (depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACTED &&
-                        depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.PICK_POSITION &&
-                        (System.currentTimeMillis() - retractTimer) > 1000) {
+                            depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACTING &&
+                        depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.PICK_POSITION) {
                         depositSlide.retractDepositMainSlide();
                     }
 
