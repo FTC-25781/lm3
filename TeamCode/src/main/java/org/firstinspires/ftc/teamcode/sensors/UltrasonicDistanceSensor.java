@@ -37,6 +37,8 @@ public class UltrasonicDistanceSensor implements DistanceSensor {
         }
     }
 
+
+
     @Override
     public Manufacturer getManufacturer() {
         return Manufacturer.Other;

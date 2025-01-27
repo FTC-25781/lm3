@@ -24,8 +24,8 @@ public class DepositSlideSubsystem implements Subsystem {
     public UltrasonicDistanceSensor rangeSensor;
 
     private static final int MAX_HEIGHT = 42;
-    private static final int V4B_HEIGHT = 22;
-    private static final int RETRACT_HEIGHT = 9;
+    private static final int V4B_HEIGHT = 30;
+    private static final int RETRACT_HEIGHT = 13;
 
 
     public static enum Deposit_state {
@@ -95,14 +95,12 @@ public class DepositSlideSubsystem implements Subsystem {
 
     // auto retract slides
     public Runnable retractDepositMainSlide() {
-        //ToDo: Check is already at or below retract position if so return null.
-        if (rangeSensor.getDistance(DistanceUnit.INCH) <= RETRACT_HEIGHT) {
-            return null;
-        }
+        if(CURRENT_STATE== Deposit_state.RETRACTING || CURRENT_STATE == Deposit_state.RETRACTED) return null;
+
+        if (rangeSensor.getDistance(DistanceUnit.INCH) <= RETRACT_HEIGHT) return null;
 
         verticalSlideMotor.setPower(-0.6);
         verticalSlideMotor2.setPower(-0.6);
-        // ToDo: set the state
         CURRENT_STATE = Deposit_state.RETRACTING;
         return null;
     }
@@ -130,7 +128,7 @@ public class DepositSlideSubsystem implements Subsystem {
 
                 break;
             case RETRACTING:
-                if (rangeSensor.getDistance(DistanceUnit.INCH) < RETRACT_HEIGHT) {
+                if (rangeSensor.getDistance(DistanceUnit.INCH) > RETRACT_HEIGHT) {
                     telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
                     telemetry.update();
                 }

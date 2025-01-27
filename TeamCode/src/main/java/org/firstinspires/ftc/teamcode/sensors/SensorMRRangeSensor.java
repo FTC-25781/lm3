@@ -35,6 +35,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -54,8 +55,22 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class SensorMRRangeSensor extends LinearOpMode {
 
     public UltrasonicDistanceSensor rangeSensor;
+    private DcMotor Mot1;
+    private DcMotor Mot2;
 
     @Override public void runOpMode() {
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        Mot1 = hardwareMap.get(DcMotor.class, "vsmot");
+        Mot2 = hardwareMap.get(DcMotor.class, "vsmot2");
+
+        Mot1.setDirection(DcMotor.Direction.REVERSE);
+        Mot2.setDirection(DcMotor.Direction.FORWARD);
+
+        Mot1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        Mot2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // get a reference to our compass
         rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"));
@@ -63,6 +78,10 @@ public class SensorMRRangeSensor extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            double power = gamepad1.left_stick_y;
+            Mot1.setPower(power);
+            Mot2.setPower(power);
+
             telemetry.addData("cm", "%.2f cm", rangeSensor.getDistance(DistanceUnit.INCH));
             telemetry.update();
         }
