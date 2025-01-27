@@ -36,6 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import java.util.LinkedList;
 
 import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -57,8 +58,13 @@ public class SensorMRRangeSensor extends LinearOpMode {
     public UltrasonicDistanceSensor rangeSensor;
     private DcMotor Mot1;
     private DcMotor Mot2;
+    private LinkedList<Double> distanceReadings; // List to store the distance readings
+    private int windowSize = 5; // Size of the moving average window
 
     @Override public void runOpMode() {
+
+        distanceReadings = new LinkedList<>();
+        double currentDistance;
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -74,6 +80,7 @@ public class SensorMRRangeSensor extends LinearOpMode {
 
         // get a reference to our compass
         rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"));
+
         // wait for the start button to be pressed
         waitForStart();
 
@@ -82,7 +89,23 @@ public class SensorMRRangeSensor extends LinearOpMode {
             Mot1.setPower(power);
             Mot2.setPower(power);
 
-            telemetry.addData("cm", "%.2f cm", rangeSensor.getDistance(DistanceUnit.INCH));
+            currentDistance = rangeSensor.getDistance(DistanceUnit.INCH);
+            distanceReadings.add(currentDistance);
+
+
+            // If the list exceeds the window size, remove the oldest reading
+            if (distanceReadings.size() > windowSize) {
+                distanceReadings.removeFirst();
+            }
+
+            // Calculate the moving average
+            double sum = 0.0;
+            for (double value : distanceReadings) {
+                sum += value;
+            }
+            double movingAverage = sum / distanceReadings.size();
+
+            telemetry.addData("cm", "%.2f cm", movingAverage);
             telemetry.update();
         }
     }
