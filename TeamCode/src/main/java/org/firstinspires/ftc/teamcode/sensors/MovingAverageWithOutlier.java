@@ -17,27 +17,33 @@ public class MovingAverageWithOutlier {
 
     public double add(double value) {
         // Check for outlier
-        if (!window.isEmpty() && isOutlier(value)) {
-            // Ignore outlier, keep previous average
-            return getAverage();
-        }
+        // Ignore outlier, keep previous average
+        //if (!window.isEmpty() && isOutlier(value)) {
+        // if (!window.isEmpty()) {
+        //    return getAverage();
+        // }
         // Add new value to the window
         window.add(value);
         // Remove oldest value if window exceeds size
         if (window.size() > windowSize) { window.poll(); }
         return getAverage();
     }
-
+/*
     private boolean isOutlier(double value) {
         double avg = getAverage();
         double deviation = Math.abs(value - avg);
         return deviation > outlierThreshold;
     }
-
+*/
     private double getAverage() {
-        if (window.isEmpty()) { return 0; }
+        if (window.isEmpty()) {
+            return 0;
+        }
         double sum = 0;
-        for (double num : window) { sum += num; }
+        for (double num : window)
+        {
+            sum += num;
+        }
         return sum / window.size();
     }
 }

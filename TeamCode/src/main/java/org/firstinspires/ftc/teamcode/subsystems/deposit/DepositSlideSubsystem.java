@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems.deposit;
 
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
@@ -24,7 +25,7 @@ public class DepositSlideSubsystem implements Subsystem {
     public double verticalDistance = 0;
     private static final int MAX_HEIGHT = 42;
     private static final int V4B_HEIGHT = 30;
-    private static final int RETRACT_HEIGHT = 9;
+    private static final int RETRACT_HEIGHT = 13;
 
     private final MovingAverageWithOutlier movingAverage;
 
@@ -47,14 +48,16 @@ public class DepositSlideSubsystem implements Subsystem {
     public DepositSlideSubsystem(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
-        movingAverage = new MovingAverageWithOutlier(5, 9);
+        movingAverage = new MovingAverageWithOutlier(3, 6);
 
         depositV4B = new DepositV4BSubsystem(hardwareMap, telemetry);
 
         verticalSlideMotor = hardwareMap.get(DcMotorImplEx.class, "vsmot");
         verticalSlideMotor2 = hardwareMap.get(DcMotorImplEx.class, "vsmot2");
         depositLimitSwitch = hardwareMap.get(DigitalChannel.class, "dpltsw");
-        rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"));
+        LynxModule hub = (LynxModule) hardwareMap.get(LynxModule.class, "Control Hub");
+
+        rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"), hub);
 
         verticalSlideMotor.setDirection(DcMotor.Direction.REVERSE);
         verticalSlideMotor2.setDirection(DcMotor.Direction.FORWARD);
@@ -85,8 +88,8 @@ public class DepositSlideSubsystem implements Subsystem {
                 verticalDistance >= MAX_HEIGHT) {
             return;
         }
-        verticalSlideMotor.setPower(0.8);
-        verticalSlideMotor2.setPower(0.8);
+        verticalSlideMotor.setPower(0.6);
+        verticalSlideMotor2.setPower(0.6);
         CURRENT_STATE = Deposit_state.EXTENDING;
     }
 
@@ -109,28 +112,16 @@ public class DepositSlideSubsystem implements Subsystem {
 
     public void update() {
         verticalDistance = movingAverage.add(rangeSensor.getDistance(DistanceUnit.INCH));
-
         switch (CURRENT_STATE) {
             case EXTENDING:
-                if (verticalDistance < MAX_HEIGHT) {
-                    telemetry.addData("current value: ", verticalDistance);
-                    telemetry.update();
-                } else {
+                if (verticalDistance > MAX_HEIGHT) {
                     verticalSlideMotor.setPower(0.2);
                     verticalSlideMotor2.setPower(0.2);
                     CURRENT_STATE = Deposit_state.EXTENDED;
                 }
                 break;
             case RETRACTING:
-                if (verticalDistance <= 0) {
-                    telemetry.addData("Warning", "Invalid distance detected: " + verticalDistance);
-                    telemetry.update();
-                    return; // Skip further processing
-                }
-                if (verticalDistance > RETRACT_HEIGHT) {
-                    telemetry.addData("current position: ", verticalSlideMotor.getCurrentPosition());
-                    telemetry.update();
-                } else {
+                if (verticalDistance < RETRACT_HEIGHT) {
                     verticalSlideMotor.setPower(0.2);
                     verticalSlideMotor2.setPower(0.2);
                     CURRENT_STATE = Deposit_state.RETRACTED;

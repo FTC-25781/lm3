@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems.pitch;
 
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
@@ -53,7 +54,9 @@ public class PitchSlideSubsystem implements Subsystem {
         verticalSlideMotor = hardwareMap.get(DcMotorImplEx.class, "vsmot");
         verticalSlideMotor2 = hardwareMap.get(DcMotorImplEx.class, "vsmot2");
         depositLimitSwitch = hardwareMap.get(DigitalChannel.class, "dpltsw");
-        rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"));
+        LynxModule hub = (LynxModule) hardwareMap.get(LynxModule.class, "Control Hub");
+
+        rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"), hub);
 
         verticalSlideMotor.setDirection(DcMotor.Direction.REVERSE);
         verticalSlideMotor2.setDirection(DcMotor.Direction.FORWARD);

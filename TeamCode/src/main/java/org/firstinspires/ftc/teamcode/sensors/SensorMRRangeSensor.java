@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.sensors;
 
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsAnalogOpticalDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -37,6 +38,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -68,6 +70,7 @@ public class SensorMRRangeSensor extends LinearOpMode {
 
         Mot1 = hardwareMap.get(DcMotor.class, "vsmot");
         Mot2 = hardwareMap.get(DcMotor.class, "vsmot2");
+        LynxModule hub = (LynxModule) hardwareMap.get(LynxModule.class, "Control Hub");
 
         Mot1.setDirection(DcMotor.Direction.REVERSE);
         Mot2.setDirection(DcMotor.Direction.FORWARD);
@@ -76,7 +79,7 @@ public class SensorMRRangeSensor extends LinearOpMode {
         Mot2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // get a reference to our compass
-        rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"));
+        rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"), hub);
         MovingAverageWithOutlier movingAverage = new MovingAverageWithOutlier(5, 4);
 
         // wait for the start button to be pressed
@@ -84,12 +87,19 @@ public class SensorMRRangeSensor extends LinearOpMode {
 
         while (opModeIsActive()) {
             double power = gamepad1.left_stick_y;
+            double batteryVoltage = hub.getInputVoltage(VoltageUnit.VOLTS);
             Mot1.setPower(-power);
             Mot2.setPower(-power);
 
             currentDistance = rangeSensor.getDistance(DistanceUnit.INCH);
             // Window size 5, outlier threshold 10
             telemetry.addData("Inch", "%.2f inch", movingAverage.add(currentDistance));
+            telemetry.addData("Inch(raw)", "%.2f inch", currentDistance);
+            telemetry.addData("Voltage", rangeSensor.voltage);
+            telemetry.addData("Power ", "%.2f ", power);
+            telemetry.addData("Battery Voltage", batteryVoltage);
+
+
             telemetry.update();
         }
     }

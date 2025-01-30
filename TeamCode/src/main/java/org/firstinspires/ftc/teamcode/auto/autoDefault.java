@@ -247,8 +247,7 @@ public class autoDefault extends OpMode {
                     // Making sure that we are in SPECIMEN_POS and that we are both not retracted or retracting before retracting
                     if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.SPECIMEN_POSITION &&
                         depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACTED &&
-                        depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACTING &&
-                        (System.currentTimeMillis() - startRetraction) > 4000) {
+                        depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACTING) {
                         depositSlide.retractDepositMainSlide();
                     }
 
@@ -349,7 +348,8 @@ public class autoDefault extends OpMode {
         telemetry.addData("deposit ARM current state: ", depositV4B.CURRENT_STATE.name());
         telemetry.addData("deposit slide current state: ", depositSlide.CURRENT_STATE.name());
         telemetry.addData("Deposit timer: ", depositV4B.depostTimerDiff);
-        telemetry.addData("Vertical height(inch): ", movingAverage.add(depositSlide.rangeSensor.getDistance(DistanceUnit.INCH)));
+        telemetry.addData("Vertical height(inch): ", depositSlide.verticalDistance);
+        telemetry.addData("Vertical raw height(inch): ", depositSlide.rangeSensor.getDistance(DistanceUnit.INCH));
 
         telemetry.addData("Motor 1 Power Consumption: ", depositSlide.verticalSlideMotor.getCurrent(CurrentUnit.AMPS));
         telemetry.addData("Motor 2 Power Consumption: ", depositSlide.verticalSlideMotor2.getCurrent(CurrentUnit.AMPS));
