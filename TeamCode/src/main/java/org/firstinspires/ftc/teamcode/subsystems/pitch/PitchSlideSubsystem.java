@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems.deposit;
+package org.firstinspires.ftc.teamcode.subsystems.pitch;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -7,19 +7,18 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.sensors.MovingAverageWithOutlier;
 import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
 
-public class DepositSlideSubsystem implements Subsystem {
+public class PitchSlideSubsystem implements Subsystem {
 
     private final DigitalChannel depositLimitSwitch;
     public final DcMotorImplEx verticalSlideMotor;
     public final DcMotorImplEx verticalSlideMotor2;
-    public DepositV4BSubsystem depositV4B;
+    public PitchV4BSubsystem depositV4B;
     public UltrasonicDistanceSensor rangeSensor;
     public double verticalDistance = 0;
     private static final int MAX_HEIGHT = 42;
@@ -44,12 +43,12 @@ public class DepositSlideSubsystem implements Subsystem {
     ElapsedTime timer = new ElapsedTime();
     public final Telemetry telemetry;
 
-    public DepositSlideSubsystem(HardwareMap hardwareMap, Telemetry telemetry) {
+    public PitchSlideSubsystem(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
         movingAverage = new MovingAverageWithOutlier(5, 9);
 
-        depositV4B = new DepositV4BSubsystem(hardwareMap, telemetry);
+        depositV4B = new PitchV4BSubsystem(hardwareMap, telemetry);
 
         verticalSlideMotor = hardwareMap.get(DcMotorImplEx.class, "vsmot");
         verticalSlideMotor2 = hardwareMap.get(DcMotorImplEx.class, "vsmot2");
@@ -80,7 +79,7 @@ public class DepositSlideSubsystem implements Subsystem {
 
     // auto get slides up
     public void extendDepositMainSlide() {
-        if (CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDING ||
+        if (CURRENT_STATE == Deposit_state.EXTENDING ||
                 CURRENT_STATE == Deposit_state.EXTENDED ||
                 verticalDistance >= MAX_HEIGHT) {
             return;
