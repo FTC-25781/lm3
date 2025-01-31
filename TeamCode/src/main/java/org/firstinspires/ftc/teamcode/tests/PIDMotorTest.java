@@ -45,6 +45,7 @@ public class PIDMotorTest extends LinearOpMode {
         waitForStart();
         Time = System.currentTimeMillis();
 
+        // Calculates and limits power
         while (opModeIsActive()) {
             double rawpower = calculatePID(targetPosition, pidMotor.getCurrentPosition());
 
