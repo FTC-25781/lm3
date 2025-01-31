@@ -42,12 +42,9 @@ public class IntakeSlideSubsystem {
         sensorDistance = hardwareMap.get(DistanceSensor.class, "hlas");
         intakeLimitSwitch = hardwareMap.get(DigitalChannel.class, "inltsw");
 
-        Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor) sensorDistance;
-
         intakeLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
 
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         CURRENT_STATE = IntakeSlideSubsystem.Intake_state.INITIALISED;
     }
 
@@ -55,29 +52,26 @@ public class IntakeSlideSubsystem {
         slideMotor.setPower(clampMotorPower(power));
     }
 
-    public Runnable extendMainSlide() {
+    public void extendMainSlide() {
         if (CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDING ||
-                CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED)
-            return null;
-
-        if (sensorDistance.getDistance(DistanceUnit.CM) >= MAX_POS) return null;
+                CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED ||
+                sensorDistance.getDistance(DistanceUnit.CM) >= MAX_POS) {
+            return;
+        }
 
         slideMotor.setPower(-1);
-
         CURRENT_STATE = IntakeSlideSubsystem.Intake_state.EXTENDING;
-        return null;
     }
 
-    public Runnable retractMainSlide() {
+    public void retractMainSlide() {
         if (CURRENT_STATE == Intake_state.RETRACTING ||
-                CURRENT_STATE == Intake_state.RETRACTED)
-            return null;
-
-        if (sensorDistance.getDistance(DistanceUnit.CM) <= MIN_POS) return null;
+                CURRENT_STATE == Intake_state.RETRACTED ||
+                sensorDistance.getDistance(DistanceUnit.CM) <= MIN_POS) {
+            return;
+        }
 
         slideMotor.setPower(1);
         CURRENT_STATE = Intake_state.RETRACTING;
-        return null;
     }
 
     private void stopAndResetSlide() {
@@ -110,19 +104,12 @@ public class IntakeSlideSubsystem {
                 }
                 break;
             case EXTENDED:
-                break;
             case STOPPED:
-                break;
             case RETRACTED:
-                break;
             case INITIALISED:
-                break;
             case LIMIT_SW_HIT:
-                break;
             case UNINITIALISED:
-                break;
             case LIMIT_SW_NOT_HIT:
-                break;
             default:
                 break;
         }

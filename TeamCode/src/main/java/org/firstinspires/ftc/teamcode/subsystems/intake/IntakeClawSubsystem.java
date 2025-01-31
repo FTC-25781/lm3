@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositV4BSubsystem;
+
 import java.util.concurrent.TimeUnit;
 
 public class IntakeClawSubsystem {
@@ -14,6 +16,7 @@ public class IntakeClawSubsystem {
     private static final double CLAW_OPEN_POS = 0.77;
     private static final double CLAW_CLOSED_POS = 1.0;
     private double currentOrientation = 0.0;
+    private static final long POSITIONING_TIME_MS = 1000; // Constant for positioning time
 
     public static enum IntakeClaw_state {
         INITIALISED,
@@ -63,21 +66,25 @@ public class IntakeClawSubsystem {
     }
 
     // Opens the claw to a pre-defined position
-    public Runnable openClaw() {
+    public void openClaw() {
+        if (CURRENT_STATE == IntakeClaw_state.OPENING ||
+        CURRENT_STATE == IntakeClaw_state.OPENED) {
+            return;
+        }
         clawServo.setPosition(CLAW_OPEN_POS);
-        CURRENT_STATE = IntakeClaw_state.OPENING;
         timer.reset();
-        timer.startTime();
-        return null;
+        CURRENT_STATE = IntakeClaw_state.OPENING;
     }
 
     // Closes the claw to a pre-defined position
-    public Runnable closeClaw() {
+    public void closeClaw()   {
+        if (CURRENT_STATE == IntakeClaw_state.CLOSING ||
+        CURRENT_STATE == IntakeClaw_state.CLOSED) {
+            return;
+        }
         clawServo.setPosition(CLAW_CLOSED_POS);
-        CURRENT_STATE = IntakeClaw_state.CLOSING;
         timer.reset();
-        timer.startTime();
-        return null;
+        CURRENT_STATE = IntakeClaw_state.CLOSING;
     }
 
     private double orientationClamp(double value) {
@@ -87,25 +94,20 @@ public class IntakeClawSubsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case OPENING:
-                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                if (timer.time(TimeUnit.MILLISECONDS) > POSITIONING_TIME_MS) {
                     CURRENT_STATE = IntakeClaw_state.OPENED;
                 }
                 break;
             case CLOSING:
-                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                if (timer.time(TimeUnit.MILLISECONDS) > POSITIONING_TIME_MS) {
                     CURRENT_STATE = IntakeClaw_state.CLOSED;
                 }
                 break;
             case OPENED:
-                break;
             case CLOSED:
-                break;
             case INITIALISED:
-                break;
             case UNINITIALISED:
-                break;
             case STOPPED:
-                break;
             default:
                 break;
         }

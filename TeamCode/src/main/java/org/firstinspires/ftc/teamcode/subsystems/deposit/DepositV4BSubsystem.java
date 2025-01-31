@@ -50,28 +50,35 @@ public class DepositV4BSubsystem implements Subsystem {
         CURRENT_STATE = Depositv4b_state.INITIALISED;
     }
 
-    public Runnable setWristDropPosition() {
+    public void setWristDropPosition() {
+        if (CURRENT_STATE == Depositv4b_state.DROP_POSITIONING ||
+        CURRENT_STATE == Depositv4b_state.DROP_POSITION) {
+            return;
+        }
         setWristPosition(DROP, DROP);
         CURRENT_STATE = Depositv4b_state.DROP_POSITIONING;
+        timer.reset(); // Reset the timer
         depositTimer = System.currentTimeMillis();
-        timer.reset(); // Reset the timer
-        timer.startTime();
-        return null;
     }
 
-    public Runnable setWristPickPosition() {
+    public void setWristPickPosition() {
+        if (CURRENT_STATE == Depositv4b_state.PICK_POSITIONING ||
+        CURRENT_STATE == Depositv4b_state.PICK_POSITION) {
+            return;
+        }
         setWristPosition(PICKUP, PICKUP);
-        CURRENT_STATE = Depositv4b_state.PICK_POSITIONING;
         timer.reset(); // Reset the timer
-        timer.startTime();
-        return null;
+        CURRENT_STATE = Depositv4b_state.PICK_POSITIONING;
     }
 
-    public Runnable setWristSpecimenDropPosition() {
-        timer.reset(); // Reset the timer
+    public void setWristSpecimenDropPosition() {
+        if (CURRENT_STATE == Depositv4b_state.SPECIMEN_POSITIONING ||
+        CURRENT_STATE == Depositv4b_state.SPECIMEN_POSITION) {
+            return;
+        }
         setWristPosition(SPECIMEN_DROP, SPECIMEN_DROP);
+        timer.reset(); // Reset the timer
         CURRENT_STATE = Depositv4b_state.SPECIMEN_POSITIONING;
-        return null;
     }
 
     private void setWristPosition(double pos1, double pos2) {
@@ -82,7 +89,6 @@ public class DepositV4BSubsystem implements Subsystem {
     @Override
     public void update() {
         switch (CURRENT_STATE) {
-
             case PICK_POSITIONING:
                 if (timer.time(TimeUnit.MILLISECONDS) >= POSITIONING_TIME_MS) {
                     CURRENT_STATE = Depositv4b_state.PICK_POSITION;
@@ -94,31 +100,15 @@ public class DepositV4BSubsystem implements Subsystem {
                 }
                 break;
             case DROP_POSITIONING:
-                depostTimerDiff = timer.time(TimeUnit.MILLISECONDS);
- //               if ( depostTimerDiff > 1000) {
                 if (timer.time(TimeUnit.MILLISECONDS) >= POSITIONING_TIME_MS) {
                     CURRENT_STATE = Depositv4b_state.DROP_POSITION;
                 }
                 break;
-
-            case PICK_POSITION:
-                break;
-
             case DROP_POSITION:
-                break;
-
             case STOPPED:
-                break;
-
             case SPECIMEN_POSITION:
-                break;
-
             case INITIALISED:
-                break;
-
             case UNINITIALISED:
-                break;
-
             default:
                 break;
         }

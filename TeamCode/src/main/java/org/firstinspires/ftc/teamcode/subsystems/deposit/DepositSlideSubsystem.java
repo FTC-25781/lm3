@@ -17,6 +17,8 @@ import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
 
+import java.util.concurrent.TimeUnit;
+
 public class DepositSlideSubsystem implements Subsystem {
 
     public DigitalChannel depositLimitSwitch;
@@ -31,7 +33,7 @@ public class DepositSlideSubsystem implements Subsystem {
     // Reference values
     private static final int    MAX_HEIGHT              = 42;
     private static final int    V4B_HEIGHT              = 30;
-    private static final int    RETRACT_HEIGHT          = 17;
+    private static final int    RETRACT_HEIGHT          = 19;
     private static final double NOMINAL_BATTERY_VOLTAGE = 12.0; // Fully charged battery
     private static final double MAX_MOTOR_CURRENT       = 5.0; // Max safe motor current in Amps
 
@@ -84,8 +86,12 @@ public class DepositSlideSubsystem implements Subsystem {
             verticalSlideMotor.setPower(0.1);
             verticalSlideMotor2.setPower(0.1);
         } else {
-            verticalSlideMotor.setPower(clampPower(power * -0.6));
-            verticalSlideMotor2.setPower(clampPower(power * -0.6));
+            verticalSlideMotor.setPower(adjMotorPower(power * -0.6,
+                    hub.getInputVoltage(VoltageUnit.VOLTS),
+                    verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
+            verticalSlideMotor2.setPower(adjMotorPower(power * -0.6,
+                    hub.getInputVoltage(VoltageUnit.VOLTS),
+                    verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
         }
     }
 
@@ -103,6 +109,7 @@ public class DepositSlideSubsystem implements Subsystem {
                 hub.getInputVoltage(VoltageUnit.VOLTS),
                 verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
         CURRENT_STATE = Deposit_state.EXTENDING;
+        timer.reset();
     }
 
     // auto retract slides
@@ -120,6 +127,7 @@ public class DepositSlideSubsystem implements Subsystem {
                 hub.getInputVoltage(VoltageUnit.VOLTS),
                 verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
         CURRENT_STATE = Deposit_state.RETRACTING;
+        timer.reset();
     }
 
     private double clampPower(double power) {
@@ -145,10 +153,12 @@ public class DepositSlideSubsystem implements Subsystem {
         verticalDistance = movingAverage.add(rangeSensor.getDistance(DistanceUnit.INCH));
         switch (CURRENT_STATE) {
             case EXTENDING:
-                if (verticalDistance > MAX_HEIGHT) {
+                if (verticalDistance > MAX_HEIGHT ||
+                        timer.time(TimeUnit.MILLISECONDS) > 4000) {
                     verticalSlideMotor.setPower(0.2);
                     verticalSlideMotor2.setPower(0.2);
                     CURRENT_STATE = Deposit_state.EXTENDED;
+                    timer.reset();
                 }
                 break;
             case RETRACTING:

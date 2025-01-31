@@ -108,7 +108,7 @@ public class TeleOpEnhancements extends OpMode {
 
 
     private void sendTelemetry() {
-        telemetry.addData("Orientation Position", intakeClaw.orientationServo);
+        telemetry.addData("Orientation Position", intakeClaw.orientationServo.getPosition());
         telemetry.addData("Wrist Servo 1 Position", intakeV4B.wristServo1.getPosition());
         telemetry.addData("Wrist Servo 2 Position", intakeV4B.wristServo2.getPosition());
         telemetry.addData("Slide Power", intakeSlide.slideMotor.getPower());

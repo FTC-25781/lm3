@@ -57,9 +57,6 @@ public class LimitSwitchTest extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
-
-
         // get a reference to our touchSensor object.
         depositLmtSw = hardwareMap.get(DigitalChannel.class, "dpltsw");
         intakeLmtSw = hardwareMap.get(DigitalChannel.class, "inltsw");
@@ -112,49 +109,49 @@ public class LimitSwitchTest extends LinearOpMode {
             rightDrive.setPower(vpower);
             leftDrive.setPower(vpower);;
 
-            if(!intakeLmtSw.getState()) {
-                hsmot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                hsmot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
-
-            if(!depositLmtSw.getState()) {
-                rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-                leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
+//            if(!intakeLmtSw.getState()) {
+//                hsmot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                hsmot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            }
+//
+//            if(!depositLmtSw.getState()) {
+//                rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//
+//                leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            }
 //
 //            if(gamepad2.a) {
 //                DepositSlideSubsystem.retractDepositMainSlide();
 //            }
 
-            if(gamepad1.a) {
-                hsmot.setTargetPosition(-4994);
-                hsmot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                hsmot.setPower(-0.2);
-                while (hsmot.isBusy() ) {
-                    telemetry.addData("Currently at",  " at %7d", hsmot.getCurrentPosition());
-                    telemetry.update();
-                }
-                hsmot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
-
-            if(gamepad1.b) {
-                rightDrive.setTargetPosition(5000);
-                leftDrive.setTargetPosition(5000);
-                rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                rightDrive.setPower(0.2);
-                leftDrive.setPower(0.2);
-                while (rightDrive.isBusy() && leftDrive.isBusy() ) {
-                    telemetry.addData("Currently at",  " at %7d", rightDrive.getCurrentPosition());
-                    telemetry.update();
-                }
-                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
+//            if(gamepad1.a) {
+//                hsmot.setTargetPosition(-4994);
+//                hsmot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//                hsmot.setPower(-0.2);
+//                while (hsmot.isBusy() ) {
+//                    telemetry.addData("Currently at",  " at %7d", hsmot.getCurrentPosition());
+//                    telemetry.update();
+//                }
+//                hsmot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            }
+//
+//            if(gamepad1.b) {
+//                rightDrive.setTargetPosition(5000);
+//                leftDrive.setTargetPosition(5000);
+//                rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//                leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//
+//                rightDrive.setPower(0.2);
+//                leftDrive.setPower(0.2);
+//                while (rightDrive.isBusy() && leftDrive.isBusy() ) {
+//                    telemetry.addData("Currently at",  " at %7d", rightDrive.getCurrentPosition());
+//                    telemetry.update();
+//                }
+//                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            }
 
             telemetry.addData("Deposit limit switch", depositLmtSw.getState());
             telemetry.addData("Intake limit switch", intakeLmtSw.getState());

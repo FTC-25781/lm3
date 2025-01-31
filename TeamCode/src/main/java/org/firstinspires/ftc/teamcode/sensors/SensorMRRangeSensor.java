@@ -95,7 +95,7 @@ public class SensorMRRangeSensor extends LinearOpMode {
 
         // get a reference to our compass
         rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"), hub);
-        MovingAverageWithOutlier movingAverage = new MovingAverageWithOutlier(5, 4);
+        MovingAverageWithOutlier movingAverage = new MovingAverageWithOutlier(15, 7);
 
         // wait for the start button to be pressed
         waitForStart();
@@ -109,15 +109,15 @@ public class SensorMRRangeSensor extends LinearOpMode {
 
             currentDistance = rangeSensor.getDistance(DistanceUnit.INCH);
             // Window size 5, outlier threshold 10
-            telemetry.addLine("====== Range Sensor information======");
+            telemetry.addLine("====== Range Sensor information ======");
             telemetry.addData("Average distance (Inch)", "%.2f inch", movingAverage.add(currentDistance));
             telemetry.addData("Current distance (Inch)", "%.2f inch", currentDistance);
             telemetry.addData("Sensor O/P Voltage", rangeSensor.voltage);
-            telemetry.addLine("====== Motor information======");
+            telemetry.addLine("====== Motor information ======");
             telemetry.addData("Motor requested Power ", "%.2f ", power);
             telemetry.addData("Motor-1 Current", Mot1.getCurrent(CurrentUnit.AMPS));
             telemetry.addData("Motor-2 Current", Mot2.getCurrent(CurrentUnit.AMPS));
-            telemetry.addLine("====== Hub information======");
+            telemetry.addLine("====== Hub information ======");
             telemetry.addData("Battery Voltage", hub.getInputVoltage(VoltageUnit.VOLTS));
             telemetry.addData("Battery Current",  hub.getCurrent(CurrentUnit.AMPS));
             telemetry.update();

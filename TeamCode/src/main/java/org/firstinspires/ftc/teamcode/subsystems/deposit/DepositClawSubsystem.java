@@ -32,7 +32,6 @@ public class DepositClawSubsystem implements Subsystem {
 
     public DepositClawSubsystem(HardwareMap hardwareMap) {
         clawServo = hardwareMap.get(Servo.class, "dclsrv");
-
         CURRENT_STATE = DepositClawSubsystem.DepositClaw_state.INITIALISED;
     }
 
@@ -40,18 +39,24 @@ public class DepositClawSubsystem implements Subsystem {
         closeDepositClaw();
     }
 
-    public Runnable openDepositClaw() {
+    public void openDepositClaw() {
+        if (CURRENT_STATE == DepositClaw_state.OPENING ||
+                CURRENT_STATE == DepositClaw_state.OPENED) {
+            return;
+        }
         clawServo.setPosition(CLAW_OPEN_POS);
         CURRENT_STATE = DepositClaw_state.OPENING;
         timer.reset();
-        return null;
     }
 
-    public Runnable closeDepositClaw() {
+    public void closeDepositClaw() {
+        if (CURRENT_STATE == DepositClaw_state.CLOSING ||
+        CURRENT_STATE == DepositClaw_state.CLOSED) {
+            return;
+        }
         clawServo.setPosition(CLAW_CLOSED_POS);
         CURRENT_STATE = DepositClaw_state.CLOSING;
         timer.reset();
-        return null;
     }
 
     @Override
@@ -68,15 +73,10 @@ public class DepositClawSubsystem implements Subsystem {
                 }
                 break;
             case OPENED:
-                break;
             case STOPPED:
-                break;
             case CLOSED:
-                break;
             case INITIALISED:
-                break;
             case UNINITIALISED:
-                break;
             default:
                 break;
         }
