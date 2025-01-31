@@ -8,7 +8,9 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 import org.firstinspires.ftc.teamcode.sensors.MovingAverageWithOutlier;
 import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 
@@ -17,15 +19,21 @@ import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
 
 public class DepositSlideSubsystem implements Subsystem {
 
-    private final DigitalChannel depositLimitSwitch;
-    public final DcMotorImplEx verticalSlideMotor;
-    public final DcMotorImplEx verticalSlideMotor2;
+    public DigitalChannel depositLimitSwitch;
+    public DcMotorImplEx verticalSlideMotor;
+    public DcMotorImplEx verticalSlideMotor2;
+    public LynxModule hub;
+
     public DepositV4BSubsystem depositV4B;
     public UltrasonicDistanceSensor rangeSensor;
     public double verticalDistance = 0;
-    private static final int MAX_HEIGHT = 42;
-    private static final int V4B_HEIGHT = 30;
-    private static final int RETRACT_HEIGHT = 13;
+
+    // Reference values
+    private static final int    MAX_HEIGHT              = 42;
+    private static final int    V4B_HEIGHT              = 30;
+    private static final int    RETRACT_HEIGHT          = 17;
+    private static final double NOMINAL_BATTERY_VOLTAGE = 12.0; // Fully charged battery
+    private static final double MAX_MOTOR_CURRENT       = 5.0; // Max safe motor current in Amps
 
     private final MovingAverageWithOutlier movingAverage;
 
@@ -52,10 +60,10 @@ public class DepositSlideSubsystem implements Subsystem {
 
         depositV4B = new DepositV4BSubsystem(hardwareMap, telemetry);
 
-        verticalSlideMotor = hardwareMap.get(DcMotorImplEx.class, "vsmot");
+        verticalSlideMotor  = hardwareMap.get(DcMotorImplEx.class, "vsmot");
         verticalSlideMotor2 = hardwareMap.get(DcMotorImplEx.class, "vsmot2");
-        depositLimitSwitch = hardwareMap.get(DigitalChannel.class, "dpltsw");
-        LynxModule hub = (LynxModule) hardwareMap.get(LynxModule.class, "Control Hub");
+        depositLimitSwitch  = hardwareMap.get(DigitalChannel.class, "dpltsw");
+        hub                 = hardwareMap.get(LynxModule.class, "Control Hub");
 
         rangeSensor = new UltrasonicDistanceSensor(hardwareMap.get(AnalogInput.class, "vdist1"), hub);
 
@@ -88,8 +96,12 @@ public class DepositSlideSubsystem implements Subsystem {
                 verticalDistance >= MAX_HEIGHT) {
             return;
         }
-        verticalSlideMotor.setPower(0.6);
-        verticalSlideMotor2.setPower(0.6);
+        verticalSlideMotor.setPower(adjMotorPower(0.6,
+                hub.getInputVoltage(VoltageUnit.VOLTS),
+                verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
+        verticalSlideMotor2.setPower(adjMotorPower(0.6,
+                hub.getInputVoltage(VoltageUnit.VOLTS),
+                verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
         CURRENT_STATE = Deposit_state.EXTENDING;
     }
 
@@ -101,13 +113,32 @@ public class DepositSlideSubsystem implements Subsystem {
             return;
         }
 
-        verticalSlideMotor.setPower(-0.4);
-        verticalSlideMotor2.setPower(-0.4);
+        verticalSlideMotor.setPower(adjMotorPower(-0.4,
+                hub.getInputVoltage(VoltageUnit.VOLTS),
+                verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
+        verticalSlideMotor2.setPower(adjMotorPower(-0.4,
+                hub.getInputVoltage(VoltageUnit.VOLTS),
+                verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
         CURRENT_STATE = Deposit_state.RETRACTING;
     }
 
     private double clampPower(double power) {
         return Math.max(-1.0, Math.min(1.0, power));
+    }
+
+    private double adjMotorPower(double basePower, double batteryVoltage, double motorCurrent){
+        // Compute power adjustment based on battery voltage
+        double voltageCompensation = NOMINAL_BATTERY_VOLTAGE / batteryVoltage;
+
+        // Limit power if current draw is too high (overload protection)
+        double currentCompensation = 1.0;
+        if (motorCurrent > MAX_MOTOR_CURRENT) {
+            currentCompensation = MAX_MOTOR_CURRENT / motorCurrent;
+        }
+
+        // Calculate final motor power
+        double adjustedPower = basePower * voltageCompensation * currentCompensation;
+        return Math.max(-1, Math.min(1.0, adjustedPower)); // Ensure -1.0 <= power <= 1.0
     }
 
     public void update() {

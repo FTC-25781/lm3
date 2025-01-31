@@ -29,7 +29,6 @@ public class UltrasonicDistanceSensor implements DistanceSensor {
         double temp=0;
 
         double batteryVoltage = hub.getInputVoltage(VoltageUnit.VOLTS);
-
         voltage = analog.getVoltage();
         for(int i=0; i<11; i++) {
             inches = (analog.getVoltage() * 312.5) / 2.54 * 1.6857;
@@ -37,6 +36,7 @@ public class UltrasonicDistanceSensor implements DistanceSensor {
             temp = (temp + inches)/2;
         }
 
+        analog.getMaxVoltage();
         inches = temp;
 
         switch (unit) {

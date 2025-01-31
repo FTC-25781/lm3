@@ -30,16 +30,16 @@
 package org.firstinspires.ftc.teamcode.sensors;
 
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsAnalogOpticalDistanceSensor;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.UltrasonicSensor;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
-import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**
@@ -56,21 +56,36 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 // comment out or remove this line to enable this OpMode
 public class SensorMRRangeSensor extends LinearOpMode {
 
-    public UltrasonicDistanceSensor rangeSensor;
-    private DcMotor Mot1;
-    private DcMotor Mot2;
+    private UltrasonicDistanceSensor rangeSensor;
+    private DcMotorEx Mot1;
+    private DcMotorEx  Mot2;
+    private LynxModule hub;
+    // private UltrasonicSensor ultrasonicSensor;
+    private VoltageSensor batteryVoltageSensor;
+    private AnalogInput currentSensor;
 
+    // Reference values
+    private static final double NOMINAL_BATTERY_VOLTAGE = 12.0; // Fully charged battery
+    private static final double MAX_MOTOR_CURRENT = 5.0; // Max safe motor current in Amps
 
     @Override public void runOpMode() {
 
         double currentDistance;
 
+
+
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
-        Mot1 = hardwareMap.get(DcMotor.class, "vsmot");
-        Mot2 = hardwareMap.get(DcMotor.class, "vsmot2");
-        LynxModule hub = (LynxModule) hardwareMap.get(LynxModule.class, "Control Hub");
+        Mot1 = hardwareMap.get(DcMotorEx.class, "vsmot");
+        Mot2 = hardwareMap.get(DcMotorEx.class, "vsmot2");
+        hub = (LynxModule) hardwareMap.get(LynxModule.class, "Control Hub");
+        // ultrasonicSensor = hardwareMap.get(UltrasonicSensor.class, "ultrasonicSensor");
+        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+
+        // currentSensor = hardwareMap.get(AnalogInput.class, "currentSensor"); // Analog current sensor
+
+        // ultrasonicSensor.getUltrasonicLevel();
 
         Mot1.setDirection(DcMotor.Direction.REVERSE);
         Mot2.setDirection(DcMotor.Direction.FORWARD);
@@ -87,20 +102,40 @@ public class SensorMRRangeSensor extends LinearOpMode {
 
         while (opModeIsActive()) {
             double power = gamepad1.left_stick_y;
-            double batteryVoltage = hub.getInputVoltage(VoltageUnit.VOLTS);
-            Mot1.setPower(-power);
-            Mot2.setPower(-power);
+
+            // Set motor power
+            Mot1.setPower(adjMotorPower(power, hub.getInputVoltage(VoltageUnit.VOLTS), Mot1.getCurrent(CurrentUnit.AMPS)));
+            Mot2.setPower(adjMotorPower(power, hub.getInputVoltage(VoltageUnit.VOLTS), Mot2.getCurrent(CurrentUnit.AMPS)));
 
             currentDistance = rangeSensor.getDistance(DistanceUnit.INCH);
             // Window size 5, outlier threshold 10
-            telemetry.addData("Inch", "%.2f inch", movingAverage.add(currentDistance));
-            telemetry.addData("Inch(raw)", "%.2f inch", currentDistance);
-            telemetry.addData("Voltage", rangeSensor.voltage);
-            telemetry.addData("Power ", "%.2f ", power);
-            telemetry.addData("Battery Voltage", batteryVoltage);
-
-
+            telemetry.addLine("====== Range Sensor information======");
+            telemetry.addData("Average distance (Inch)", "%.2f inch", movingAverage.add(currentDistance));
+            telemetry.addData("Current distance (Inch)", "%.2f inch", currentDistance);
+            telemetry.addData("Sensor O/P Voltage", rangeSensor.voltage);
+            telemetry.addLine("====== Motor information======");
+            telemetry.addData("Motor requested Power ", "%.2f ", power);
+            telemetry.addData("Motor-1 Current", Mot1.getCurrent(CurrentUnit.AMPS));
+            telemetry.addData("Motor-2 Current", Mot2.getCurrent(CurrentUnit.AMPS));
+            telemetry.addLine("====== Hub information======");
+            telemetry.addData("Battery Voltage", hub.getInputVoltage(VoltageUnit.VOLTS));
+            telemetry.addData("Battery Current",  hub.getCurrent(CurrentUnit.AMPS));
             telemetry.update();
         }
+    }
+
+    private double adjMotorPower(double basePower, double batteryVoltage, double motorCurrent){
+        // Compute power adjustment based on battery voltage
+        double voltageCompensation = NOMINAL_BATTERY_VOLTAGE / batteryVoltage;
+
+        // Limit power if current draw is too high (overload protection)
+        double currentCompensation = 1.0;
+        if (motorCurrent > MAX_MOTOR_CURRENT) {
+            currentCompensation = MAX_MOTOR_CURRENT / motorCurrent;
+        }
+
+        // Calculate final motor power
+        double adjustedPower = basePower * voltageCompensation * currentCompensation;
+        return Math.max(-1, Math.min(1.0, adjustedPower)); // Ensure -1.0 <= power <= 1.0
     }
 }
