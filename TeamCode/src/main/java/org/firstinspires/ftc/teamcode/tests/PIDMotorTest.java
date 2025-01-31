@@ -34,7 +34,7 @@ public class PIDMotorTest extends LinearOpMode {
         dashboard = FtcDashboard.getInstance();
         Telemetry dashboardTelemetry = dashboard.getTelemetry();
 
-        // Makes sure that motor goes in right direction so I don't break the slides again :)
+        // Makes sure that motor goes in right direction so I don't break the slides again :))
         pidMotor.setDirection(DcMotorEx.Direction.FORWARD);
 
         // Motor commands
