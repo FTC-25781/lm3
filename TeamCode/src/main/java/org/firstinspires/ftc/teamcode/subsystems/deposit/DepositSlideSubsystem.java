@@ -34,6 +34,7 @@ public class DepositSlideSubsystem implements Subsystem {
     private static final int    MAX_HEIGHT              = 42;
     private static final int    V4B_HEIGHT              = 30;
     private static final int    RETRACT_HEIGHT          = 19;
+    private static final int    RETRACT_HEIGHT_2          = 16;
     private static final double NOMINAL_BATTERY_VOLTAGE = 12.0; // Fully charged battery
     private static final double MAX_MOTOR_CURRENT       = 5.0; // Max safe motor current in Amps
 
@@ -48,7 +49,9 @@ public class DepositSlideSubsystem implements Subsystem {
         RETRACTED,
         STOPPED,
         LIMIT_SW_HIT,
-        LIMIT_SW_NOT_HIT
+        LIMIT_SW_NOT_HIT,
+        RETRACT_PICKED,
+        RETRACT_PICKING
     }
 
     public Deposit_state CURRENT_STATE = Deposit_state.UNINITIALISED;
@@ -130,6 +133,23 @@ public class DepositSlideSubsystem implements Subsystem {
         timer.reset();
     }
 
+    public void retractPickDepositMainSlide() {
+        if (CURRENT_STATE == Deposit_state.RETRACT_PICKING ||
+                CURRENT_STATE == Deposit_state.RETRACT_PICKED ||
+                verticalDistance <= RETRACT_HEIGHT_2 ) {
+            return;
+        }
+
+        verticalSlideMotor.setPower(adjMotorPower(-0.4,
+                hub.getInputVoltage(VoltageUnit.VOLTS),
+                verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
+        verticalSlideMotor2.setPower(adjMotorPower(-0.4,
+                hub.getInputVoltage(VoltageUnit.VOLTS),
+                verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
+        CURRENT_STATE = Deposit_state.RETRACT_PICKING;
+        timer.reset();
+    }
+
     private double clampPower(double power) {
         return Math.max(-1.0, Math.min(1.0, power));
     }
@@ -167,6 +187,15 @@ public class DepositSlideSubsystem implements Subsystem {
                     verticalSlideMotor2.setPower(0.2);
                     CURRENT_STATE = Deposit_state.RETRACTED;
                 }
+                break;
+            case RETRACT_PICKING:
+                if (verticalDistance < RETRACT_HEIGHT_2) {
+                    verticalSlideMotor.setPower(0.2);
+                    verticalSlideMotor2.setPower(0.2);
+                    CURRENT_STATE = Deposit_state.RETRACT_PICKED;
+                }
+                break;
+            case RETRACT_PICKED:
                 break;
             case EXTENDED:
                 break;

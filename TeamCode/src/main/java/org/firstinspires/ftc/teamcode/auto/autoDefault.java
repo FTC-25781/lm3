@@ -39,10 +39,12 @@ public class autoDefault extends OpMode {
     boolean isTimeSet = true;
     boolean isTimeSet2 = true;
     boolean isTimeSet3 = false;
+    boolean isTimeSet6 = false;
     long retractTimer = 0;
     long stateStartTimeSlides = 0;
     long startRetraction = 0;
     long stateStartTimeSlides2 = 0;
+    long stateStartTimeSlides6 = 0;
 
     private int pathState = 0;  // This is the variable where we store the state of our auto.
 
@@ -230,7 +232,7 @@ public class autoDefault extends OpMode {
 
             case 3: // we at grab first pick position
                 if (isWithinResolution(follower.getPose(), pickup1Pose) && isStateReady(currentTime)) {
-                    intakeClaw.orientationServo.setPosition(0.0); // setting the intake orientation to 0
+                    intakeClaw.orientationServo.setPosition(0.5); // setting the intake orientation to 0
 
                     if (depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITION &&
                         depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITIONING) {
@@ -264,46 +266,69 @@ public class autoDefault extends OpMode {
                         intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENING) {
                         intakeClaw.openClaw();
                     }
-
-                    // Once claw is opened we lower the claw to pick SAMPLE 1
+                    //set intake wrist to pick position
                     if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.OPENED &&
-                        intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.PICK_POSITION &&
-                        intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.PICK_POSITIONING) {
-                        intakeV4B.setWristPickPosition();
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.AUTO_POSITION &&
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.AUTO_POSITIONING) {
+                        intakeV4B.setWristPickAutoPosition();
                     }
-
+                    //Moving to next case if intake claw is open
+                    if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.AUTO_POSITION) {
+                        setPathState(4);
+                    }
+                }
+                break;
+            case 4:
+                if (isWithinResolution(follower.getPose(), pickup1Pose) && isStateReady(currentTime)) {
                     // Close claw before we raise the V4B
-                    if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.PICK_POSITION &&
-                        intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
-                        intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSING) {
+                    if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.AUTO_POSITION &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.CLOSING) {
                         intakeClaw.closeClaw();
                     }
 
                     // Raising the V4B
                     if (intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.CLOSED &&
-                        intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION &&
-                        intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITIONING) {
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION &&
+                            intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITIONING) {
                         intakeV4B.setWristDropPosition();
                     }
+                    //retract intake slide
+                    if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION &&
+                            intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.RETRACTED &&
+                            intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.RETRACTING) {
+                        intakeSlide.retractMainSlide();
+                    }
 
-                    if (intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION) {
+                    if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.RETRACTED &&
+                    depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACT_PICKED &&
+                    depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACT_PICKING) {
+                        depositSlide.retractPickDepositMainSlide();
+                    }
+
+                    //move to next case if slides retracted
+                    if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.RETRACT_PICKED) {
                         follower.followPath(slidesUpPick1, true);
-                        setPathState(4);
+                        setPathState(5);
                     }
                 }
-                break;
 
-            case 4: // Score first yellow sample
+            case 5: // Score first yellow sample
                 if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
                     // before go up close the deposit claw
                     if (depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSED &&
-                            depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSING) {
+                            depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSING &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENING) {
                         depositClaw.closeDepositClaw();
                         intakeClaw.openClaw();
                     }
 
                     // extend deposit main slides
-                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.CLOSED) {
+                    if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.CLOSED &&
+                    intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                    depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.EXTENDING &&
+                            depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.EXTENDED) {
                         depositSlide.extendDepositMainSlide();
                     }
 
@@ -318,18 +343,29 @@ public class autoDefault extends OpMode {
                     // start driving to score position and move to next case-2
                     if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.DROP_POSITION) {
                         follower.followPath(scorePreload, true);
-                        setPathState(5);
+                        setPathState(6);
                     }
                 }
                 break;
-            case 5:
+            case 6:
                 if (isWithinResolution(follower.getPose(), scorePose) && isStateReady(currentTime)) {
                     follower.followPath(park, true);
-                    setPathState(6);
+                    if (isTimeSet6) {
+                        stateStartTimeSlides6 = System.currentTimeMillis();
+                        isTimeSet6 = false;
+                    }
+
+                    // open the drop claw
+                    if ((System.currentTimeMillis() - stateStartTimeSlides6) > 1000 &&
+                            depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENED &&
+                            depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENING) {
+                        depositClaw.openDepositClaw();
+                    }
+                    setPathState(7);
                 }
                 break;
 
-            case 6:
+            case 7:
                 if (isWithinResolution(follower.getPose(), parkPose) && isStateReady(currentTime)) {
                     setPathState(-1); // End state
                 }
@@ -379,6 +415,7 @@ public class autoDefault extends OpMode {
         telemetry.addData("Intake Claw current state: ", intakeClaw.CURRENT_STATE.name());
         telemetry.addData("Intake ARM current state: ", intakeV4B.CURRENT_STATE.name());
         telemetry.addData("Intake slide current state: ", intakeSlide.CURRENT_STATE.name());
+        telemetry.addData("Intake timer: ", intakeV4B.timer.time(TimeUnit.MILLISECONDS));
         telemetry.addData("Horizontal range", intakeSlide.sensorDistance.getDistance(DistanceUnit.CM));
 
         //follower

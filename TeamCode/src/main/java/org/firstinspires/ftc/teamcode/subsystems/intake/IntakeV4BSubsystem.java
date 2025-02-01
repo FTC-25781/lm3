@@ -19,6 +19,7 @@ public class IntakeV4BSubsystem {
     private static final double DEFAULT = 0.15;
     private static final double DROP = 0.4;
     private static final double PICKUP = 0.05;
+    private static final double PICKUP_AUTO = 0.07;
     private static final double AUTO_PICKUP = 0.07;
     private static final long POSITIONING_TIME_MS = 1000; // Constant for positioning time
 
@@ -36,7 +37,7 @@ public class IntakeV4BSubsystem {
         STOPPED
     }
 
-    ElapsedTime timer = new ElapsedTime();
+    public ElapsedTime timer = new ElapsedTime();
 
     public IntakeV4BSubsystem.Intakev4b_state CURRENT_STATE = IntakeV4BSubsystem.Intakev4b_state.UNINITIALISED;
 
@@ -81,35 +82,18 @@ public class IntakeV4BSubsystem {
         CURRENT_STATE = Intakev4b_state.PICK_POSITIONING;
         timer.reset();
     }
-//    public void setWristPickAutoPosition() {
-//        smoothSetWristPosition(AUTO_PICKUP, AUTO_PICKUP);
-//        CURRENT_STATE = Intakev4b_state.AUTO_POSITIONING;
-//        timer.reset();
-//        timer.startTime();
-//    }
-//
-//    private void smoothSetWristPosition(double targetPos1, double targetPos2) {
-//        new Thread(() -> {
-//            smoothMoveServo(wristServo1, targetPos1);
-//        }).start();
-//        new Thread(() -> {
-//            smoothMoveServo(wristServo2, targetPos2);
-//        }).start();
-//    }
-//
-//    private void smoothMoveServo(Servo servo, double targetPosition) {
-//        double currentPosition = servo.getPosition();
-//        while (Math.abs(currentPosition - targetPosition) > POSITION_INCREMENT) {
-//            currentPosition += Math.signum(targetPosition - currentPosition) * POSITION_INCREMENT;
-//            servo.setPosition(currentPosition);
-//            try {
-//                Thread.sleep(DELAY_MS);
-//            } catch (InterruptedException e) {
-//                Thread.currentThread().interrupt();
-//            }
-//        }
-//        servo.setPosition(targetPosition); // Ensure final precision
-//    }
+
+    public void setWristPickAutoPosition() {
+        if (CURRENT_STATE == Intakev4b_state.AUTO_POSITIONING ||
+                CURRENT_STATE == Intakev4b_state.AUTO_POSITION) {
+            return;
+        }
+        wristServo1.setPosition(AUTO_PICKUP);
+        wristServo1.setPosition(AUTO_PICKUP);
+        CURRENT_STATE = Intakev4b_state.AUTO_POSITIONING;
+        timer.reset();
+    }
+
 
     public void update() {
         switch (CURRENT_STATE) {

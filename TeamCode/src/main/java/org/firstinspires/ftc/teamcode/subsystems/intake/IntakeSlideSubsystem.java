@@ -19,7 +19,7 @@ public class IntakeSlideSubsystem {
     public final Telemetry telemetry;
 
     private final double MAX_POS = 38;
-    private final int MIN_POS = 8;
+    private final int MIN_POS = 21;
     private final int EXCHANGE_POS = 20; // TODO: find exchange value
 
     public enum Intake_state {
@@ -86,19 +86,13 @@ public class IntakeSlideSubsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case EXTENDING:
-                if (sensorDistance.getDistance(DistanceUnit.CM) < MAX_POS) {
-                    telemetry.addData("current position: ", slideMotor.getCurrentPosition());
-                    telemetry.update();
-                } else {
+                if (sensorDistance.getDistance(DistanceUnit.CM) > MAX_POS) {
                     slideMotor.setPower(0);
                     CURRENT_STATE = IntakeSlideSubsystem.Intake_state.EXTENDED;
                 }
                 break;
             case RETRACTING:
-                if (sensorDistance.getDistance(DistanceUnit.CM) > MIN_POS) {
-                    telemetry.addData("current position: ", slideMotor.getCurrentPosition());
-                    telemetry.update();
-                } else {
+                if (sensorDistance.getDistance(DistanceUnit.CM) < MIN_POS) {
                     slideMotor.setPower(0);
                     CURRENT_STATE = IntakeSlideSubsystem.Intake_state.RETRACTED;
                 }
