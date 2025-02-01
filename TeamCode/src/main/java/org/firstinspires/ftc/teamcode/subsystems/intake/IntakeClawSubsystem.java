@@ -16,7 +16,7 @@ public class IntakeClawSubsystem {
     private static final double CLAW_OPEN_POS = 0.77;
     private static final double CLAW_CLOSED_POS = 1.0;
     private double currentOrientation = 0.0;
-    private static final long POSITIONING_TIME_MS = 1000; // Constant for positioning time
+    private static final long POSITIONING_TIME_MS = 500; // Constant for positioning time
 
     public static enum IntakeClaw_state {
         INITIALISED,

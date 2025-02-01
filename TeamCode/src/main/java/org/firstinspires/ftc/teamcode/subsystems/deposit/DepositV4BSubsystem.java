@@ -18,7 +18,7 @@ public class DepositV4BSubsystem implements Subsystem {
     private static final double DROP = 0.0;
     private static final double PICKUP = 0.70;
 
-    private static final long POSITIONING_TIME_MS = 1000; // Constant for positioning time
+    private static final long POSITIONING_TIME_MS = 500; // Constant for positioning time
 
     public enum Depositv4b_state {
         INITIALISED,

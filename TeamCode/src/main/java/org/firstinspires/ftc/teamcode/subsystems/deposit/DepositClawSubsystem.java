@@ -15,6 +15,8 @@ public class DepositClawSubsystem implements Subsystem {
 
     private static final double CLAW_OPEN_POS = 0.6;
     private static final double CLAW_CLOSED_POS = 0.9;
+    private static final long POSITIONING_TIME_MS = 500; // Constant for positioning time
+
 
     public static enum DepositClaw_state {
         INITIALISED,
@@ -63,12 +65,12 @@ public class DepositClawSubsystem implements Subsystem {
     public void update() {
         switch (CURRENT_STATE) {
             case OPENING:
-                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                if (timer.time(TimeUnit.MILLISECONDS) > POSITIONING_TIME_MS) {
                     CURRENT_STATE = DepositClaw_state.OPENED;
                 }
                 break;
             case CLOSING:
-                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                if (timer.time(TimeUnit.MILLISECONDS) > POSITIONING_TIME_MS) {
                     CURRENT_STATE = DepositClaw_state.CLOSED;
                 }
                 break;

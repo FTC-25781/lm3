@@ -32,7 +32,7 @@ public class UltrasonicDistanceSensor implements DistanceSensor {
         voltage = analog.getVoltage();
         for(int i=0; i<11; i++) {
             inches = (analog.getVoltage() * 312.5) / 2.54 * 1.6857;
-            inches = inches*(12.5/batteryVoltage);
+//            inches = inches*(12.5/batteryVoltage);
             temp = (temp + inches)/2;
         }
 

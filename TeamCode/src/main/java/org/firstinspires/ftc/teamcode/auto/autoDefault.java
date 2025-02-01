@@ -54,10 +54,10 @@ public class autoDefault extends OpMode {
     private final Pose startPose = new Pose(9, 111, Math.toRadians(270));
     private final Pose scorePose = new Pose(10, 132, Math.toRadians(315));
     private final Pose scoreSlidesPose = new Pose(16, 126, Math.toRadians(315));
-    private final Pose pickup1Pose = new Pose(15.9, 123, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(15.9, 122.75, Math.toRadians(0));
     private final Pose pickup2Pose = new Pose(24, 129, Math.toRadians(0));
     private final Pose parkPose = new Pose(60, 98, Math.toRadians(90));
-    private final Pose parkControlPose = new Pose(60, 98, Math.toRadians(90));
+    private final Pose parkControlPose = new Pose(52, 133, Math.toRadians(90));
     private Path park;
     private PathChain slidesUp, scorePreload, grabPickup1, slidesUpPick1, grabPickup2, slidesUpPick2, scorePickup1, scorePickup2, scorePickup3;
     ElapsedTime timers = new ElapsedTime();
@@ -246,19 +246,20 @@ public class autoDefault extends OpMode {
                         startRetraction = System.currentTimeMillis();
                     }
 
-                    // Making sure that we are in SPECIMEN_POS and that we are both not retracted or retracting before retracting
+                    // Once retracted then we extend the main slide
                     if (depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.PICK_POSITION &&
+                            intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDED &&
+                            intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDING) {
+                        intakeSlide.extendMainSlide();
+                    }
+
+                    // Making sure that we are in SPECIMEN_POS and that we are both not retracted or retracting before retracting
+                    if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED &&
                         depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACTED &&
                         depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACTING) {
                         depositSlide.retractDepositMainSlide();
                     }
 
-                    // Once retracted then we extend the main slide
-                    if (depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.RETRACTED &&
-                        intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDED &&
-                        intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.EXTENDING) {
-                        intakeSlide.extendMainSlide();
-                    }
 
                     // Open claw before we lower the V4B
                     if (intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.EXTENDED &&
@@ -405,7 +406,7 @@ public class autoDefault extends OpMode {
         telemetry.addData("deposit slide current state: ", depositSlide.CURRENT_STATE.name());
         telemetry.addData("Deposit timer: ", depositV4B.depostTimerDiff);
         telemetry.addData("Vertical height(inch): ", depositSlide.verticalDistance);
-        telemetry.addData("Vertical raw height(inch): ", depositSlide.rangeSensor.getDistance(DistanceUnit.INCH));
+        telemetry.addData("Vertical raw height(inch): ", depositSlide.laserSensor.getDistance(DistanceUnit.INCH));
 
         telemetry.addData("Motor 1 Power Consumption: ", depositSlide.verticalSlideMotor.getCurrent(CurrentUnit.AMPS));
         telemetry.addData("Motor 2 Power Consumption: ", depositSlide.verticalSlideMotor2.getCurrent(CurrentUnit.AMPS));

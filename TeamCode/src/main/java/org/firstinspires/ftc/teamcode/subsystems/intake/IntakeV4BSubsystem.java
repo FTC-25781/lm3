@@ -20,8 +20,8 @@ public class IntakeV4BSubsystem {
     private static final double DROP = 0.4;
     private static final double PICKUP = 0.05;
     private static final double PICKUP_AUTO = 0.07;
-    private static final double AUTO_PICKUP = 0.07;
-    private static final long POSITIONING_TIME_MS = 1000; // Constant for positioning time
+    private static final double AUTO_PICKUP = 0.1;
+    private static final long POSITIONING_TIME_MS = 500; // Constant for positioning time
 
     public static enum Intakev4b_state {
         INITIALISED,
