@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.TeleOp;
+package org.firstinspires.ftc.teamcode.teleop;
 
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftBackMotorName;
@@ -80,6 +80,7 @@ public class TeleOpEnhancements extends OpMode {
         updateIntakeControls();
         updateDepositControls();
         sendTelemetry();
+        autoTransfer();
     }
 
     private void updateIntakeControls() {
@@ -104,6 +105,64 @@ public class TeleOpEnhancements extends OpMode {
         if (gamepad2.dpad_down) depositV4B.setWristPickPosition();
         if (gamepad2.dpad_up) depositV4B.setWristDropPosition();
         if (gamepad2.left_stick_button) depositV4B.setWristSpecimenDropPosition();
+    }
+    private void autoTransfer() { //automatically transfers the sample from the intake to the deposit
+        //if the right bumper is pressed the transfer will start
+        if (gamepad1.right_bumper) {
+            //open the deposit claw
+            if(depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENED &&
+                    depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.OPENING) {
+                depositClaw.openDepositClaw();
+            }
+            //deposit wrist to pick position
+            if (depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.OPENED &&
+                    depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITION &&
+                    depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.PICK_POSITIONING) {
+                depositV4B.setWristPickPosition();
+            }
+            //intake wrist to drop position
+            if(depositV4B.CURRENT_STATE == DepositV4BSubsystem.Depositv4b_state.PICK_POSITION &&
+                    intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION &&
+                    intakeV4B.CURRENT_STATE != IntakeV4BSubsystem.Intakev4b_state.DROP_POSITIONING) {
+                intakeV4B.setWristDropPosition();
+            }
+            //retract the intake slide
+            if(intakeV4B.CURRENT_STATE == IntakeV4BSubsystem.Intakev4b_state.DROP_POSITION &&
+                    intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.RETRACTING &&
+                    intakeSlide.CURRENT_STATE != IntakeSlideSubsystem.Intake_state.RETRACTED) {
+                intakeSlide.retractMainSlide();
+            }
+            //retract the deposit slide to pick position
+            if(intakeSlide.CURRENT_STATE == IntakeSlideSubsystem.Intake_state.RETRACTED &&
+                    depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACT_PICKING &&
+                    depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.RETRACT_PICKED) {
+            depositSlide.retractPickDepositMainSlide();
+            }
+            //close the deposit claw
+            if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.RETRACT_PICKED &&
+                    depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSED &&
+                    depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSING) {
+                depositClaw.closeDepositClaw();
+            }
+            //open the intake claw
+            if(depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.CLOSED &&
+                    intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                    intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENING) {
+                intakeClaw.openClaw();
+            }
+            //extend the deposit slide
+            if(intakeClaw.CURRENT_STATE == IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                    depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.EXTENDED &&
+                    depositSlide.CURRENT_STATE != DepositSlideSubsystem.Deposit_state.EXTENDING) {
+                depositSlide.extendDepositMainSlide();
+            }
+            //deposit wrist to drop position
+            if(depositSlide.CURRENT_STATE == DepositSlideSubsystem.Deposit_state.EXTENDED &&
+                    depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITION &&
+                    depositV4B.CURRENT_STATE != DepositV4BSubsystem.Depositv4b_state.DROP_POSITIONING) {
+                depositV4B.setWristDropPosition();
+            }
+        }
     }
 
 
