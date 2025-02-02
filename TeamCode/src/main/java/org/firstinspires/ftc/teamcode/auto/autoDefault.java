@@ -160,7 +160,7 @@ public class autoDefault extends OpMode {
             depositClaw.openDepositClaw();
         }
     }
-
+//
     public void autonomousPathUpdate() {
         long currentTime = System.currentTimeMillis(); // Get the current time
 
