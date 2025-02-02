@@ -134,13 +134,14 @@ public class DepositSlideSubsystem implements Subsystem {
                 verticalDistance <= RETRACT_HEIGHT_2 ) {
             return;
         }
-
-        verticalSlideMotor.setPower(adjMotorPower(-0.4,
+        verticalSlideMotor.setPower(adjMotorPower(-0.6,
                 hub.getInputVoltage(VoltageUnit.VOLTS),
                 verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
-        verticalSlideMotor2.setPower(adjMotorPower(-0.4,
+        verticalSlideMotor2.setPower(adjMotorPower(-0.6,
                 hub.getInputVoltage(VoltageUnit.VOLTS),
                 verticalSlideMotor.getCurrent(CurrentUnit.AMPS)));
+//        verticalSlideMotor.setPower(-0.6);
+//        verticalSlideMotor2.setPower(-0.6);
         CURRENT_STATE = Deposit_state.RETRACT_PICKING;
         timer.reset();
     }
@@ -178,34 +179,26 @@ public class DepositSlideSubsystem implements Subsystem {
                 break;
             case RETRACTING:
                 if (verticalDistance < RETRACT_HEIGHT) {
-                    verticalSlideMotor.setPower(0.2);
-                    verticalSlideMotor2.setPower(0.2);
+                    verticalSlideMotor.setPower(0.1);
+                    verticalSlideMotor2.setPower(0.1);
                     CURRENT_STATE = Deposit_state.RETRACTED;
                 }
                 break;
             case RETRACT_PICKING:
                 if (verticalDistance < RETRACT_HEIGHT_2) {
-                    verticalSlideMotor.setPower(0.2);
-                    verticalSlideMotor2.setPower(0.2);
+                    verticalSlideMotor.setPower(0.1);
+                    verticalSlideMotor2.setPower(0.1);
                     CURRENT_STATE = Deposit_state.RETRACT_PICKED;
                 }
                 break;
             case RETRACT_PICKED:
-                break;
             case EXTENDED:
-                break;
             case STOPPED:
-                break;
             case RETRACTED:
-                break;
             case INITIALISED:
-                break;
             case LIMIT_SW_HIT:
-                break;
             case UNINITIALISED:
-                break;
             case LIMIT_SW_NOT_HIT:
-                break;
             default:
                 break;
         }

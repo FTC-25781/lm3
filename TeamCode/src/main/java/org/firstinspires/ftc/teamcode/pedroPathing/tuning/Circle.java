@@ -64,7 +64,7 @@ public class Circle extends OpMode {
      */
     @Override
     public void loop() {
-        follower.update();
+        follower.update(false);
         if (follower.atParametricEnd()) {
             follower.followPath(circle);
         }

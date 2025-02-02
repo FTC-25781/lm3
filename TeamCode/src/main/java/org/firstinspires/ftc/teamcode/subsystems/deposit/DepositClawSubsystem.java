@@ -15,7 +15,7 @@ public class DepositClawSubsystem implements Subsystem {
 
     private static final double CLAW_OPEN_POS = 0.6;
     private static final double CLAW_CLOSED_POS = 0.9;
-    private static final long POSITIONING_TIME_MS = 500; // Constant for positioning time
+    private static final long POSITIONING_TIME_MS = 750; // Constant for positioning time
 
 
     public static enum DepositClaw_state {
@@ -28,7 +28,7 @@ public class DepositClawSubsystem implements Subsystem {
         STOPPED
     }
 
-    ElapsedTime timer = new ElapsedTime();
+    public ElapsedTime timer = new ElapsedTime();
 
     public DepositClawSubsystem.DepositClaw_state CURRENT_STATE = DepositClawSubsystem.DepositClaw_state.UNINITIALISED;
 

@@ -28,7 +28,7 @@ public class IntakeClawSubsystem {
         STOPPED
     }
 
-    private final ElapsedTime timer = new ElapsedTime();
+    public final ElapsedTime timer = new ElapsedTime();
 
     public IntakeClawSubsystem.IntakeClaw_state CURRENT_STATE = IntakeClawSubsystem.IntakeClaw_state.UNINITIALISED;
 

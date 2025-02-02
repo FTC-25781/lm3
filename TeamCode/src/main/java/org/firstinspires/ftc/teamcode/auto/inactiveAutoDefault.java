@@ -67,7 +67,7 @@ public class inactiveAutoDefault extends OpMode {
 
     @Override
     public void loop() {
-        follower.update();
+        follower.update(false);
         autonomousPathUpdate();
     }
 

@@ -68,7 +68,7 @@ public class CurvedBackAndForth extends OpMode {
      */
     @Override
     public void loop() {
-        follower.update();
+        follower.update(false);
         if (!follower.isBusy()) {
             if (forward) {
                 forward = false;

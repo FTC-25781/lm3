@@ -32,7 +32,7 @@ public class DepositV4BSubsystem implements Subsystem {
         STOPPED
     }
 
-    private final ElapsedTime timer = new ElapsedTime();
+    public final ElapsedTime timer = new ElapsedTime();
     public long depositTimer = System.currentTimeMillis();
 
     public long depostTimerDiff;

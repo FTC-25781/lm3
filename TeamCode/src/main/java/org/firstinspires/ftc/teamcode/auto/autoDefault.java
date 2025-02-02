@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.auto;
 
+import android.annotation.SuppressLint;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -318,10 +320,13 @@ public class autoDefault extends OpMode {
                 if (isWithinResolution(follower.getPose(), scoreSlidesPose) && isStateReady(currentTime)) {
                     // before go up close the deposit claw
                     if (depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSED &&
-                            depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSING &&
-                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENED &&
-                            intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENING) {
+                        depositClaw.CURRENT_STATE != DepositClawSubsystem.DepositClaw_state.CLOSING) {
                         depositClaw.closeDepositClaw();
+                    }
+
+                    if (intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENED &&
+                        intakeClaw.CURRENT_STATE != IntakeClawSubsystem.IntakeClaw_state.OPENING &&
+                        depositClaw.CURRENT_STATE == DepositClawSubsystem.DepositClaw_state.CLOSED) {
                         intakeClaw.openClaw();
                     }
 
@@ -387,9 +392,10 @@ public class autoDefault extends OpMode {
     }
 
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void loop() {
-        follower.update();
+        follower.update(false);
         autonomousPathUpdate();
 
         depositSlide.update();
@@ -401,23 +407,32 @@ public class autoDefault extends OpMode {
 
         // Deposit
         telemetry.addLine("====== Deposit information ======");
-        telemetry.addData("deposit claw current state: ", depositClaw.CURRENT_STATE.name());
-        telemetry.addData("deposit ARM current state: ", depositV4B.CURRENT_STATE.name());
-        telemetry.addData("deposit slide current state: ", depositSlide.CURRENT_STATE.name());
-        telemetry.addData("Deposit timer: ", depositV4B.depostTimerDiff);
-        telemetry.addData("Vertical height(inch): ", depositSlide.verticalDistance);
-        telemetry.addData("Vertical raw height(inch): ", depositSlide.laserSensor.getDistance(DistanceUnit.INCH));
-
-        telemetry.addData("Motor 1 Power Consumption: ", depositSlide.verticalSlideMotor.getCurrent(CurrentUnit.AMPS));
-        telemetry.addData("Motor 2 Power Consumption: ", depositSlide.verticalSlideMotor2.getCurrent(CurrentUnit.AMPS));
+        telemetry.addLine(String.format("Claw state/Timer: %s / %d",
+                depositClaw.CURRENT_STATE.name(),
+                depositClaw.timer.time(TimeUnit.MILLISECONDS)));
+        telemetry.addLine(String.format("ARM state/Timer:  %s / %d",
+                depositV4B.CURRENT_STATE.name(),
+                depositV4B.timer.time(TimeUnit.MILLISECONDS)));
+        telemetry.addLine(String.format("Slide state/Power(M1, M2):  %s / (%1.2f, %1.2f)",
+                depositSlide.CURRENT_STATE.name(),
+                depositSlide.verticalSlideMotor.getPower(),
+                depositSlide.verticalSlideMotor2.getPower()));
+        telemetry.addData("Vertical raw height(CM): ", depositSlide.laserSensor.getDistance(DistanceUnit.CM));
 
         // intake
         telemetry.addLine("====== Intake information ======");
-        telemetry.addData("Intake Claw current state: ", intakeClaw.CURRENT_STATE.name());
-        telemetry.addData("Intake ARM current state: ", intakeV4B.CURRENT_STATE.name());
-        telemetry.addData("Intake slide current state: ", intakeSlide.CURRENT_STATE.name());
-        telemetry.addData("Intake timer: ", intakeV4B.timer.time(TimeUnit.MILLISECONDS));
-        telemetry.addData("Horizontal range", intakeSlide.sensorDistance.getDistance(DistanceUnit.CM));
+        telemetry.addLine(String.format("Claw state/Timer: %s / %d",
+                intakeClaw.CURRENT_STATE.name(),
+                intakeClaw.timer.time(TimeUnit.MILLISECONDS)));
+        telemetry.addLine(String.format("ARM state/Timer:  %s / %d",
+                intakeV4B.CURRENT_STATE.name(),
+                intakeV4B.timer.time(TimeUnit.MILLISECONDS)));
+        telemetry.addLine(String.format("Slide state/Power:  %s / %1.2f",
+                intakeSlide.CURRENT_STATE.name(),
+                intakeSlide.slideMotor.getPower()));
+        telemetry.addData("Horizontal range(CM)", intakeSlide.sensorDistance.getDistance(DistanceUnit.CM));
+        telemetry.addData("Orientation Position", intakeClaw.orientationServo.getPosition());
+        telemetry.update();
 
         //follower
         telemetry.addLine("====== Follower information ======");

@@ -16,11 +16,10 @@ public class IntakeV4BSubsystem {
     private static final double POSITION_INCREMENT = 0.01;
     private static final int DELAY_MS = 20; // Delay between increments
 
-    private static final double DEFAULT = 0.15;
+    private static final double DEFAULT = 0.18;
     private static final double DROP = 0.4;
     private static final double PICKUP = 0.05;
-    private static final double PICKUP_AUTO = 0.07;
-    private static final double AUTO_PICKUP = 0.1;
+    private static final double AUTO_PICKUP = 0.12;
     private static final long POSITIONING_TIME_MS = 500; // Constant for positioning time
 
     public static enum Intakev4b_state {
@@ -55,8 +54,7 @@ public class IntakeV4BSubsystem {
         CURRENT_STATE == Intakev4b_state.DROP_POSITION) {
             return;
         }
-        wristServo1.setPosition(DROP);
-        wristServo1.setPosition(DROP);
+        setWristPosition(DROP,DROP);
         CURRENT_STATE = Intakev4b_state.DROP_POSITIONING;
         timer.reset();
     }
@@ -66,8 +64,7 @@ public class IntakeV4BSubsystem {
         CURRENT_STATE == Intakev4b_state.DEFAULT_POSITION) {
             return;
         }
-        wristServo1.setPosition(DEFAULT);
-        wristServo1.setPosition(DEFAULT);
+        setWristPosition(DEFAULT,DEFAULT);
         CURRENT_STATE = Intakev4b_state.DEFAULT_POSITIONING;
         timer.reset();
     }
@@ -77,8 +74,7 @@ public class IntakeV4BSubsystem {
         CURRENT_STATE == Intakev4b_state.PICK_POSITION) {
             return;
         }
-        wristServo1.setPosition(PICKUP);
-        wristServo1.setPosition(PICKUP);
+        setWristPosition(PICKUP,PICKUP);
         CURRENT_STATE = Intakev4b_state.PICK_POSITIONING;
         timer.reset();
     }
@@ -88,10 +84,13 @@ public class IntakeV4BSubsystem {
                 CURRENT_STATE == Intakev4b_state.AUTO_POSITION) {
             return;
         }
-        wristServo1.setPosition(AUTO_PICKUP);
-        wristServo1.setPosition(AUTO_PICKUP);
+        setWristPosition(AUTO_PICKUP,AUTO_PICKUP);
         CURRENT_STATE = Intakev4b_state.AUTO_POSITIONING;
         timer.reset();
+    }
+    private void setWristPosition(double pos1, double pos2) {
+        wristServo1.setPosition(pos1);
+        wristServo2.setPosition(pos2);
     }
 
 

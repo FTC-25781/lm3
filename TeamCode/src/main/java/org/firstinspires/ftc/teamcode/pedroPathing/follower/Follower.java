@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.follower;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.drivePIDFFeedForward;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.drivePIDFSwitch;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.forwardZeroPowerAcceleration;
@@ -507,7 +508,7 @@ public class Follower {
      * This calls an update to the PoseUpdater, which updates the robot's current position estimate.
      * This also updates all the Follower's PIDFs, which updates the motor powers.
      */
-    public void update() {
+    public void update(boolean reducespeed) {
         updatePose();
 
         if (!teleopDrive) {
@@ -569,9 +570,12 @@ public class Follower {
             calculateAveragedVelocityAndAcceleration();
 
             drivePowers = driveVectorScaler.getDrivePowers(getCentripetalForceCorrection(), teleopHeadingVector, teleopDriveVector, poseUpdater.getPose().getHeading());
-
+            double pow;
             for (int i = 0; i < motors.size(); i++) {
-                motors.get(i).setPower(drivePowers[i]);
+                pow = drivePowers[i];
+                if (reducespeed)
+                    pow/=2;
+                motors.get(i).setPower(pow);
             }
         }
     }
