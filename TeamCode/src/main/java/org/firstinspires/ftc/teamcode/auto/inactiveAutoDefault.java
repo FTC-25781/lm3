@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 
-@Autonomous(name = "Inactive Auto Blue", group = "Examples")
+@Autonomous(name = "Inactive Auto", group = "Examples")
 public class inactiveAutoDefault extends OpMode {
     private Follower follower;
     private Timer pathTimer, opmodeTimer;

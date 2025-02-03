@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeV4BSubsystem;
 
 import java.util.concurrent.TimeUnit;
 
-@Autonomous(name = "Example Auto Blue", group = "Examples")
+@Autonomous(name = "Active Auto", group = "Examples")
 public class autoDefault extends OpMode {
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
@@ -56,10 +56,10 @@ public class autoDefault extends OpMode {
     private final Pose startPose = new Pose(9, 111, Math.toRadians(270));
     private final Pose scorePose = new Pose(10, 132, Math.toRadians(315));
     private final Pose scoreSlidesPose = new Pose(16, 126, Math.toRadians(315));
-    private final Pose pickup1Pose = new Pose(15.9, 122.75, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(15.9, 123.5, Math.toRadians(0));
     private final Pose pickup2Pose = new Pose(24, 129, Math.toRadians(0));
-    private final Pose parkPose = new Pose(60, 98, Math.toRadians(90));
-    private final Pose parkControlPose = new Pose(52, 133, Math.toRadians(90));
+    private final Pose parkPose = new Pose(66, 96, Math.toRadians(90));
+    private final Pose parkControlPose = new Pose(76, 108, Math.toRadians(90));
     private Path park;
     private PathChain slidesUp, scorePreload, grabPickup1, slidesUpPick1, grabPickup2, slidesUpPick2, scorePickup1, scorePickup2, scorePickup3;
     ElapsedTime timers = new ElapsedTime();
