@@ -4,8 +4,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-
-
 import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositSlideSubsystem;
 
 import java.util.concurrent.TimeUnit;
@@ -18,10 +16,11 @@ public class IntakeV4BSubsystem {
     private static final double POSITION_INCREMENT = 0.01;
     private static final int DELAY_MS = 20; // Delay between increments
 
-    private static final double DEFAULT = 0.15;
-    private static final double DROP = 0.34;
-    private static final double PICKUP = 0;
-    private static final double AUTO_PICKUP = 0.07;
+    private static final double DEFAULT = 0.19;
+    private static final double DROP = 0.45;
+    private static final double PICKUP = 0.05;
+    private static final double AUTO_PICKUP = 0.12;
+    private static final long POSITIONING_TIME_MS = 500; // Constant for positioning time
 
     public static enum Intakev4b_state {
         INITIALISED,
@@ -37,7 +36,7 @@ public class IntakeV4BSubsystem {
         STOPPED
     }
 
-    ElapsedTime timer = new ElapsedTime();
+    public ElapsedTime timer = new ElapsedTime();
 
     public IntakeV4BSubsystem.Intakev4b_state CURRENT_STATE = IntakeV4BSubsystem.Intakev4b_state.UNINITIALISED;
 
@@ -50,92 +49,80 @@ public class IntakeV4BSubsystem {
         CURRENT_STATE = Intakev4b_state.INITIALISED;
     }
 
-    public Runnable setWristDropPosition() {
-        smoothSetWristPosition(DROP, DROP);
+    public void setWristDropPosition() {
+        if (CURRENT_STATE == Intakev4b_state.DROP_POSITIONING ||
+        CURRENT_STATE == Intakev4b_state.DROP_POSITION) {
+            return;
+        }
+        setWristPosition(DROP,DROP);
         CURRENT_STATE = Intakev4b_state.DROP_POSITIONING;
         timer.reset();
-        return null;
     }
 
-    public Runnable setWristDefaultPosition() {
-        smoothSetWristPosition(DEFAULT, DEFAULT);
+    public void setWristDefaultPosition() {
+        if (CURRENT_STATE == Intakev4b_state.DEFAULT_POSITIONING ||
+        CURRENT_STATE == Intakev4b_state.DEFAULT_POSITION) {
+            return;
+        }
+        setWristPosition(DEFAULT,DEFAULT);
         CURRENT_STATE = Intakev4b_state.DEFAULT_POSITIONING;
         timer.reset();
-        return null;
     }
 
-    public Runnable setWristPickPosition() {
-        smoothSetWristPosition(PICKUP, PICKUP);
+    public void setWristPickPosition() {
+        if (CURRENT_STATE == Intakev4b_state.PICK_POSITIONING ||
+        CURRENT_STATE == Intakev4b_state.PICK_POSITION) {
+            return;
+        }
+        setWristPosition(PICKUP,PICKUP);
         CURRENT_STATE = Intakev4b_state.PICK_POSITIONING;
         timer.reset();
-        return null;
     }
-    public Runnable setWristPickAutoPosition() {
-        smoothSetWristPosition(AUTO_PICKUP, AUTO_PICKUP);
+
+    public void setWristPickAutoPosition() {
+        if (CURRENT_STATE == Intakev4b_state.AUTO_POSITIONING ||
+                CURRENT_STATE == Intakev4b_state.AUTO_POSITION) {
+            return;
+        }
+        setWristPosition(AUTO_PICKUP,AUTO_PICKUP);
         CURRENT_STATE = Intakev4b_state.AUTO_POSITIONING;
         timer.reset();
-        return null;
+    }
+    private void setWristPosition(double pos1, double pos2) {
+        wristServo1.setPosition(pos1);
+        wristServo2.setPosition(pos2);
     }
 
-    private void smoothSetWristPosition(double targetPos1, double targetPos2) {
-        new Thread(() -> {
-            smoothMoveServo(wristServo1, targetPos1);
-        }).start();
-        new Thread(() -> {
-            smoothMoveServo(wristServo2, targetPos2);
-        }).start();
-    }
-
-    private void smoothMoveServo(Servo servo, double targetPosition) {
-        double currentPosition = servo.getPosition();
-        while (Math.abs(currentPosition - targetPosition) > POSITION_INCREMENT) {
-            currentPosition += Math.signum(targetPosition - currentPosition) * POSITION_INCREMENT;
-            servo.setPosition(currentPosition);
-            try {
-                Thread.sleep(DELAY_MS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        servo.setPosition(targetPosition); // Ensure final precision
-    }
 
     public void update() {
         switch (CURRENT_STATE) {
             case DROP_POSITIONING:
-                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                if (timer.time(TimeUnit.MILLISECONDS) > POSITIONING_TIME_MS) {
                     CURRENT_STATE = Intakev4b_state.DROP_POSITION;
                 }
                 break;
             case PICK_POSITIONING:
-                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                if (timer.time(TimeUnit.MILLISECONDS) > POSITIONING_TIME_MS) {
                     CURRENT_STATE = Intakev4b_state.PICK_POSITION;
                 }
                 break;
             case AUTO_POSITIONING:
-                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                if (timer.time(TimeUnit.MILLISECONDS) > POSITIONING_TIME_MS) {
                     CURRENT_STATE = Intakev4b_state.AUTO_POSITION;
                 }
                 break;
             case DEFAULT_POSITIONING:
-                if (timer.time(TimeUnit.MILLISECONDS) > 1000) {
+                if (timer.time(TimeUnit.MILLISECONDS) > POSITIONING_TIME_MS) {
                     CURRENT_STATE = Intakev4b_state.DEFAULT_POSITION;
                 }
                 break;
             case DROP_POSITION:
-                break;
             case PICK_POSITION:
-                break;
             case AUTO_POSITION:
-                break;
             case DEFAULT_POSITION:
-                break;
             case UNINITIALISED:
-                break;
             case INITIALISED:
-                break;
             case STOPPED:
-                break;
             default:
                 break;
         }
