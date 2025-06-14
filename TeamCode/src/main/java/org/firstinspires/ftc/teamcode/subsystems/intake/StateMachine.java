@@ -28,7 +28,8 @@ public class StateMachine extends LinearOpMode {
     }
 
     public void setState (AutoState state, LinearOpMode opmode) {
-
+        currentState = state;
+        currentState.onEnter(this, opmode);
     }
 
     @Override

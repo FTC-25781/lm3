@@ -5,10 +5,22 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public enum AutoState {
     INITIALISED {
+        public void onEnter(StateMachine sm, LinearOpMode opMode) {
 
+        }
+
+        public void update(StateMachine sm, LinearOpMode opMode) {
+
+        }
     },
     UNINITIALISED {
+        public void onEnter(StateMachine sm, LinearOpMode opMode) {
 
+        }
+
+        public void update(StateMachine sm, LinearOpMode opMode) {
+
+        }
     },
     EXTENDING {
         public void onEnter(StateMachine sm, LinearOpMode opMode) {
@@ -26,15 +38,43 @@ public enum AutoState {
 
     },
     EXTENDED {
+        public void onEnter(StateMachine sm, LinearOpMode opMode) {
+
+        }
+
+        public void update(StateMachine sm, LinearOpMode opMode) {
+
+        }
 
     },
     RETRACTING {
+        public void onEnter(StateMachine sm, LinearOpMode opMode) {
 
+        }
+
+        public void update(StateMachine sm, LinearOpMode opMode) {
+
+        }
     },
     RETRACTED {
+        public void onEnter(StateMachine sm, LinearOpMode opMode) {
 
+        }
+
+        public void update(StateMachine sm, LinearOpMode opMode) {
+
+        }
     },
     STOPPED {
+        public void onEnter(StateMachine sm, LinearOpMode opMode) {
 
-    },
+        }
+
+        public void update(StateMachine sm, LinearOpMode opMode) {
+
+        }
+    };
+
+    public void onEnter(StateMachine sm, LinearOpMode opMode) {}
+    public abstract void update(StateMachine sm, LinearOpMode opMode);
 }
