@@ -1,527 +1,216 @@
-# FTC Dashboard Enhanced Telemetry Implementation Plan
+# FTC Dashboard Enhanced Telemetry Implementation
 
 ## Overview
 
-This document provides a comprehensive plan for implementing enhanced telemetry packet transmission from the FTC robot code to the Redux-based enhanced FTC Dashboard. The implementation will enable real-time subsystem monitoring, advanced visualization, and comprehensive telemetry capabilities.
+This document outlines the implementation of enhanced telemetry packet transmission from the FTC robot code to the Redux-based enhanced FTC Dashboard. The implementation enables real-time subsystem monitoring, advanced visualization, and comprehensive telemetry capabilities.
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────┐       WebSocket       ┌─────────────────────────┐
-│   FTC Robot Code        │ ──────────────────►   │  Enhanced Dashboard     │
-│   (This Repository)     │    JSON Messages      │  (ftc-dashboard repo)   │
-│                         │                       │                         │
-│  - Subsystems           │                       │  - Redux Store          │
-│  - Telemetry Manager    │                       │  - React Components     │
-│  - WebSocket Client     │                       │  - WebSocket Server     │
-└─────────────────────────┘                       └─────────────────────────┘
+┌─────────────────────────┐    Telemetry Packets   ┌─────────────────────────┐
+│   FTC Robot Code        │ ──────────────────►    │  Enhanced Dashboard     │
+│   (This Repository)     │    JSON Messages       │  (ftc-dashboard repo)   │
+│                         │  via __enhanced_       │                         │
+│  - Subsystems           │    _dashboard__        │  - Redux Store          │
+│  - Telemetry Manager    │                        │  - React Components     │
+│  - Jackson POJOs        │                        │  - WebSocket Server     │
+└─────────────────────────┘                        └─────────────────────────┘
 ```
+
+## Implementation Status
+
+### ✅ Completed Components
+
+#### 1. Jackson Dependencies Added
+Added to `build.dependencies.gradle`:
+```gradle
+implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
+```
+
+#### 2. POJO Message Classes Created
+All message classes with Jackson annotations in `/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/dashboard/messages/`:
+
+- **BaseMessage.java** - Abstract base with polymorphic JSON handling
+- **SubsystemUpdateMessage.java** - For subsystem state updates
+- **TelemetryUpdateMessage.java** - For telemetry key-value pairs
+- **SubsystemData.java** - Abstract base for subsystem-specific data
+- **DrivetrainData.java** - Position, velocity, encoders, currents, heading
+- **IntakeData.java** - Slide position, state, limits, sensors
+- **DepositData.java** - Dual motor positions, state, laser distance
+- **GeneralData.java** - Runtime, battery, update rate
+- **CameraData.java** - Vision/camera telemetry structure
+
+#### 3. Enhanced Dashboard Manager
+**EnhancedDashboard.java** - Singleton implementation that:
+- Uses Jackson ObjectMapper for JSON serialization
+- Sends messages via FTC Dashboard telemetry packets
+- Uses special `__enhanced_dashboard__` key for message routing
+
+#### 4. Telemetry Infrastructure
+- **TelemetryManager.java** - Central manager with:
+  - 10Hz rate limiting
+  - General system telemetry
+  - Subsystem registration capability
+- **SubsystemTelemetryBuilder.java** - Fluent API for creating telemetry messages
+
+#### 5. Subsystem Integration
+Enhanced telemetry methods implemented in:
+- **Follower.java** - `sendEnhancedTelemetry()` for drivetrain data
+- **IntakeSlideSubsystem.java** - `sendEnhancedTelemetry()` for intake metrics
+- **DepositSlideSubsystem.java** - `sendEnhancedTelemetry()` for deposit data
+
+#### 6. OpMode Integration
+**TeleOpEnhancements.java** updated with:
+- TelemetryManager initialization
+- Enhanced telemetry calls in main loop (lines 103-108)
+- Maintains existing telemetry alongside enhanced version
 
 ## Message Protocol
 
-The enhanced dashboard expects two primary message types:
-
-### 1. Subsystem Update Message
+### Subsystem Update Message Format
 ```json
 {
-  "type": "SUBSYSTEM_UPDATE",
-  "subsystem": "drivetrain|intake|deposit|camera|general",
+  "messageType": "subsystemUpdate",
+  "timestamp": 1234567890,
+  "subsystem": "drivetrain",
   "data": {
-    // Subsystem-specific data
-  },
-  "timestamp": 1234567890
+    "position": { "x": 10.5, "y": 20.3, "z": 0 },
+    "velocity": { "x": 2.1, "y": -1.5, "z": 0 },
+    "encoders": {
+      "leftFront": 1234,
+      "leftBack": 1235,
+      "rightFront": 1233,
+      "rightBack": 1236
+    },
+    "currents": {
+      "leftFront": 1.2,
+      "leftBack": 1.1,
+      "rightFront": 1.3,
+      "rightBack": 1.2
+    },
+    "heading": 45.5
+  }
 }
 ```
 
-### 2. Enhanced Telemetry Message
+### Telemetry Update Message Format
 ```json
 {
-  "type": "TELEMETRY_UPDATE",
-  "section": "drivetrain|intake|deposit|claw|general",
+  "messageType": "telemetryUpdate",
+  "timestamp": 1234567890,
+  "section": "intake",
   "values": [
     {
-      "key": "variableName",
-      "value": 123.45,
-      "unit": "mm"
+      "key": "slidePosition",
+      "value": 23.5,
+      "unit": "cm"
+    },
+    {
+      "key": "motorCurrent",
+      "value": 1.8,
+      "unit": "A"
     }
-  ],
-  "timestamp": 1234567890
+  ]
 }
 ```
 
-## Implementation Steps
+## Current Data Flow
 
-### Step 1: Create Enhanced Telemetry Infrastructure
+1. **Subsystem Update**: Each subsystem's `sendEnhancedTelemetry()` method:
+   - Creates appropriate data POJO (IntakeData, DepositData, etc.)
+   - Populates with current sensor/state values
+   - Sends via EnhancedDashboard singleton
 
-#### 1.1 Create Enhanced Dashboard Manager
-Create `/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/dashboard/EnhancedDashboard.java`:
+2. **JSON Serialization**: EnhancedDashboard:
+   - Uses Jackson ObjectMapper to convert POJOs to JSON
+   - Handles polymorphic types via @JsonTypeInfo annotations
+   - Manages serialization errors gracefully
 
-```java
-package org.firstinspires.ftc.teamcode.dashboard;
+3. **Packet Transmission**: 
+   - JSON string added to TelemetryPacket with `__enhanced_dashboard__` key
+   - Sent through standard FTC Dashboard infrastructure
+   - Dashboard intercepts and routes to enhanced components
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import java.util.HashMap;
-import java.util.Map;
+## Testing Integration
 
-public class EnhancedDashboard {
-    private static EnhancedDashboard instance;
-    private final FtcDashboard dashboard;
-    
-    private EnhancedDashboard() {
-        this.dashboard = FtcDashboard.getInstance();
-    }
-    
-    public static EnhancedDashboard getInstance() {
-        if (instance == null) {
-            instance = new EnhancedDashboard();
-        }
-        return instance;
-    }
-    
-    public void sendSubsystemUpdate(String subsystem, Map<String, Object> data) {
-        try {
-            JSONObject message = new JSONObject();
-            message.put("type", "SUBSYSTEM_UPDATE");
-            message.put("subsystem", subsystem);
-            message.put("timestamp", System.currentTimeMillis());
-            message.put("data", new JSONObject(data));
-            
-            sendWebSocketMessage(message);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    public void sendTelemetryUpdate(String section, Map<String, TelemetryValue> values) {
-        try {
-            JSONObject message = new JSONObject();
-            message.put("type", "TELEMETRY_UPDATE");
-            message.put("section", section);
-            message.put("timestamp", System.currentTimeMillis());
-            
-            JSONArray valuesArray = new JSONArray();
-            for (Map.Entry<String, TelemetryValue> entry : values.entrySet()) {
-                JSONObject valueObj = new JSONObject();
-                valueObj.put("key", entry.getKey());
-                valueObj.put("value", entry.getValue().value);
-                if (entry.getValue().unit != null) {
-                    valueObj.put("unit", entry.getValue().unit);
-                }
-                valuesArray.put(valueObj);
-            }
-            message.put("values", valuesArray);
-            
-            sendWebSocketMessage(message);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    private void sendWebSocketMessage(JSONObject message) {
-        // The FTC Dashboard doesn't directly expose WebSocket sending,
-        // so we'll use a custom telemetry packet approach
-        TelemetryPacket packet = new TelemetryPacket();
-        packet.put("__enhanced_dashboard__", message.toString());
-        dashboard.sendTelemetryPacket(packet);
-    }
-    
-    public static class TelemetryValue {
-        public final Object value;
-        public final String unit;
-        
-        public TelemetryValue(Object value, String unit) {
-            this.value = value;
-            this.unit = unit;
-        }
-        
-        public TelemetryValue(Object value) {
-            this(value, null);
-        }
-    }
-}
-```
+To test the implementation:
 
-#### 1.2 Create Subsystem Telemetry Interfaces
-Create `/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/dashboard/SubsystemTelemetry.java`:
+1. **Verify JSON Serialization**:
+   ```bash
+   adb logcat | grep -E "(EnhancedDashboard|Jackson|JSON)"
+   ```
 
-```java
-package org.firstinspires.ftc.teamcode.dashboard;
+2. **Check Telemetry Flow**:
+   - Run "Match TeleOp" OpMode
+   - Monitor dashboard for `__enhanced_dashboard__` packets
+   - Verify JSON structure matches expected format
 
-import java.util.Map;
+3. **Validate Update Rate**:
+   - Should maintain ~10Hz for enhanced telemetry
+   - Standard telemetry continues at normal rate
 
-public interface SubsystemTelemetry {
-    Map<String, Object> getSubsystemData();
-    Map<String, EnhancedDashboard.TelemetryValue> getTelemetryValues();
-    String getSubsystemName();
-}
-```
+## Remaining Work
 
-### Step 2: Enhance Existing Subsystems
+### Subsystems Needing Telemetry Methods
+- [ ] IntakeClawSubsystem - claw state, sample detection
+- [ ] IntakeV4BSubsystem - servo positions, wrist angles
+- [ ] DepositClawSubsystem - claw state, grip status
+- [ ] DepositV4BSubsystem - arm positions, states
 
-#### 2.1 Update Drivetrain Telemetry
-Modify the `Follower` class to implement enhanced telemetry:
+### Dashboard Enhancements
+- [ ] Custom widgets for subsystem visualization
+- [ ] Data recording/playback functionality
+- [ ] Alert thresholds and notifications
+- [ ] Performance metrics dashboard
 
-```java
-// Add to Follower class
-private EnhancedDashboard enhancedDashboard = EnhancedDashboard.getInstance();
+### Additional Features
+- [ ] Camera/vision telemetry integration
+- [ ] Autonomous path visualization
+- [ ] Historical data analysis tools
 
-public void sendEnhancedTelemetry() {
-    Map<String, Object> drivetrainData = new HashMap<>();
-    
-    // Position data
-    Map<String, Double> position = new HashMap<>();
-    position.put("x", poseUpdater.getPose().getX());
-    position.put("y", poseUpdater.getPose().getY());
-    position.put("z", poseUpdater.getPose().getHeading());
-    drivetrainData.put("position", position);
-    
-    // Velocity data
-    Map<String, Double> velocity = new HashMap<>();
-    velocity.put("x", poseUpdater.getVelocity().getXComponent());
-    velocity.put("y", poseUpdater.getVelocity().getYComponent());
-    velocity.put("z", poseUpdater.getHeadingVelocity());
-    drivetrainData.put("velocity", velocity);
-    
-    // Encoder values
-    Map<String, Integer> encoders = new HashMap<>();
-    encoders.put("leftFront", leftFront.getCurrentPosition());
-    encoders.put("leftBack", leftBack.getCurrentPosition());
-    encoders.put("rightFront", rightFront.getCurrentPosition());
-    encoders.put("rightBack", rightBack.getCurrentPosition());
-    drivetrainData.put("encoders", encoders);
-    
-    // Motor currents
-    Map<String, Double> currents = new HashMap<>();
-    currents.put("leftFront", leftFront.getCurrent(CurrentUnit.AMPS));
-    currents.put("leftBack", leftBack.getCurrent(CurrentUnit.AMPS));
-    currents.put("rightFront", rightFront.getCurrent(CurrentUnit.AMPS));
-    currents.put("rightBack", rightBack.getCurrent(CurrentUnit.AMPS));
-    drivetrainData.put("currents", currents);
-    
-    // Send subsystem update
-    enhancedDashboard.sendSubsystemUpdate("drivetrain", drivetrainData);
-    
-    // Send telemetry values
-    Map<String, EnhancedDashboard.TelemetryValue> telemetryValues = new HashMap<>();
-    telemetryValues.put("x_position", new EnhancedDashboard.TelemetryValue(
-        poseUpdater.getPose().getX(), "inches"));
-    telemetryValues.put("y_position", new EnhancedDashboard.TelemetryValue(
-        poseUpdater.getPose().getY(), "inches"));
-    telemetryValues.put("heading", new EnhancedDashboard.TelemetryValue(
-        Math.toDegrees(poseUpdater.getPose().getHeading()), "degrees"));
-    telemetryValues.put("velocity", new EnhancedDashboard.TelemetryValue(
-        poseUpdater.getTotalVelocity(), "in/s"));
-    
-    enhancedDashboard.sendTelemetryUpdate("drivetrain", telemetryValues);
-}
-```
+## Performance Characteristics
 
-#### 2.2 Update Intake Subsystem
-Add to `IntakeSlideSubsystem`:
-
-```java
-private EnhancedDashboard enhancedDashboard = EnhancedDashboard.getInstance();
-
-public void sendEnhancedTelemetry() {
-    Map<String, Object> intakeData = new HashMap<>();
-    
-    // Slide position
-    intakeData.put("slidePosition", sensorDistance.getDistance(DistanceUnit.CM));
-    intakeData.put("targetPosition", targetPosition);
-    intakeData.put("state", CURRENT_STATE.name());
-    intakeData.put("motorPower", slideMotor.getPower());
-    intakeData.put("limitSwitch", !intakeLimitSwitch.getState());
-    
-    enhancedDashboard.sendSubsystemUpdate("intake", intakeData);
-    
-    // Telemetry values
-    Map<String, EnhancedDashboard.TelemetryValue> telemetryValues = new HashMap<>();
-    telemetryValues.put("slide_position", new EnhancedDashboard.TelemetryValue(
-        sensorDistance.getDistance(DistanceUnit.CM), "cm"));
-    telemetryValues.put("motor_current", new EnhancedDashboard.TelemetryValue(
-        slideMotor.getCurrent(CurrentUnit.AMPS), "A"));
-    telemetryValues.put("state", new EnhancedDashboard.TelemetryValue(
-        CURRENT_STATE.name()));
-    
-    enhancedDashboard.sendTelemetryUpdate("intake", telemetryValues);
-}
-```
-
-Add similar implementations for:
-- `IntakeV4BSubsystem` (servo positions)
-- `IntakeClawSubsystem` (claw state, sample detection)
-
-#### 2.3 Update Deposit Subsystem
-Add similar telemetry methods to:
-- `DepositSlideSubsystem`
-- `DepositV4BSubsystem`
-- `DepositClawSubsystem`
-
-### Step 3: Create Central Telemetry Manager
-
-Create `/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/dashboard/TelemetryManager.java`:
-
-```java
-package org.firstinspires.ftc.teamcode.dashboard;
-
-import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-
-public class TelemetryManager {
-    private static TelemetryManager instance;
-    private final List<SubsystemTelemetry> subsystems = new ArrayList<>();
-    private final ElapsedTime timer = new ElapsedTime();
-    private final double UPDATE_RATE_HZ = 10.0; // 10Hz update rate
-    private double lastUpdateTime = 0;
-    private final EnhancedDashboard dashboard = EnhancedDashboard.getInstance();
-    
-    private TelemetryManager() {}
-    
-    public static TelemetryManager getInstance() {
-        if (instance == null) {
-            instance = new TelemetryManager();
-        }
-        return instance;
-    }
-    
-    public void registerSubsystem(SubsystemTelemetry subsystem) {
-        subsystems.add(subsystem);
-    }
-    
-    public void update() {
-        double currentTime = timer.seconds();
-        if (currentTime - lastUpdateTime >= 1.0 / UPDATE_RATE_HZ) {
-            lastUpdateTime = currentTime;
-            
-            // Send general dashboard update
-            sendGeneralUpdate();
-            
-            // Update all registered subsystems
-            for (SubsystemTelemetry subsystem : subsystems) {
-                dashboard.sendSubsystemUpdate(
-                    subsystem.getSubsystemName(), 
-                    subsystem.getSubsystemData()
-                );
-                dashboard.sendTelemetryUpdate(
-                    subsystem.getSubsystemName(),
-                    subsystem.getTelemetryValues()
-                );
-            }
-        }
-    }
-    
-    private void sendGeneralUpdate() {
-        Map<String, Object> generalData = new HashMap<>();
-        generalData.put("opModeActive", true);
-        generalData.put("runtime", timer.seconds());
-        generalData.put("updateRate", UPDATE_RATE_HZ);
-        
-        dashboard.sendSubsystemUpdate("general", generalData);
-    }
-}
-```
-
-### Step 4: Integrate into OpModes
-
-#### 4.1 Update TeleOpEnhancements
-Modify `TeleOpEnhancements.java`:
-
-```java
-// Add to class members
-private TelemetryManager telemetryManager;
-
-// Add to init()
-telemetryManager = TelemetryManager.getInstance();
-
-// Register subsystems if they implement SubsystemTelemetry
-// Or manually send telemetry in loop()
-
-// Add to loop()
-@Override
-public void loop() {
-    // Existing code...
-    
-    // Send enhanced telemetry
-    follower.sendEnhancedTelemetry();
-    intakeSlide.sendEnhancedTelemetry();
-    intakeV4B.sendEnhancedTelemetry();
-    intakeClaw.sendEnhancedTelemetry();
-    depositSlide.sendEnhancedTelemetry();
-    depositV4B.sendEnhancedTelemetry();
-    depositClaw.sendEnhancedTelemetry();
-    
-    // Or use centralized manager
-    telemetryManager.update();
-}
-```
-
-### Step 5: Dashboard WebSocket Handler Modification
-
-Since FTC Dashboard doesn't directly expose WebSocket message sending, we need to modify the dashboard's WebSocket handler to parse our custom messages.
-
-Create a custom fork of FTC Dashboard or add a middleware layer that:
-1. Intercepts telemetry packets with `__enhanced_dashboard__` key
-2. Parses the JSON message
-3. Forwards it through the WebSocket to the React dashboard
-
-Alternatively, implement a custom WebSocket server in the robot code that the enhanced dashboard can connect to directly.
-
-### Step 6: Camera Integration (Optional)
-
-For camera telemetry:
-
-```java
-public class CameraTelemetry {
-    public void sendCameraUpdate(List<DetectedObject> objects) {
-        Map<String, Object> cameraData = new HashMap<>();
-        
-        List<Map<String, Object>> detectedObjects = new ArrayList<>();
-        for (DetectedObject obj : objects) {
-            Map<String, Object> objData = new HashMap<>();
-            objData.put("x", obj.x);
-            objData.put("y", obj.y);
-            objData.put("width", obj.width);
-            objData.put("height", obj.height);
-            objData.put("confidence", obj.confidence);
-            objData.put("label", obj.label);
-            objData.put("color", obj.color);
-            detectedObjects.add(objData);
-        }
-        
-        cameraData.put("detectedObjects", detectedObjects);
-        cameraData.put("frameRate", getCurrentFPS());
-        cameraData.put("processingTime", getProcessingTime());
-        
-        EnhancedDashboard.getInstance().sendSubsystemUpdate("camera", cameraData);
-    }
-}
-```
-
-## Testing Strategy
-
-### 1. Unit Tests
-- Test JSON message generation
-- Test telemetry value formatting
-- Test update rate limiting
-
-### 2. Integration Tests
-- Verify WebSocket connection
-- Test message delivery to dashboard
-- Validate Redux store updates
-
-### 3. System Tests
-- Full robot-to-dashboard communication
-- Performance testing at competition load
-- Network reliability testing
-
-## Performance Considerations
-
-1. **Update Rate**: Limit updates to 10Hz to prevent network congestion
-2. **Message Size**: Keep messages under 64KB
-3. **Buffering**: Implement message queuing for reliability
-4. **Compression**: Consider gzip for large messages
-
-## Implementation Timeline
-
-### Phase 1: Core Infrastructure (Week 1)
-- [ ] Create EnhancedDashboard class
-- [ ] Implement message protocol
-- [ ] Set up basic WebSocket communication
-
-### Phase 2: Subsystem Integration (Week 2)
-- [ ] Add telemetry to drivetrain
-- [ ] Add telemetry to intake subsystem
-- [ ] Add telemetry to deposit subsystem
-
-### Phase 3: Testing & Optimization (Week 3)
-- [ ] Performance testing
-- [ ] Bug fixes
-- [ ] Documentation
-
-### Phase 4: Advanced Features (Week 4)
-- [ ] Camera integration
-- [ ] Recording/replay support
-- [ ] Custom alerts
+- **Update Rate**: 10Hz for enhanced telemetry
+- **Message Size**: Typically 200-500 bytes per update
+- **Latency**: <50ms typical (network dependent)
+- **CPU Impact**: Minimal due to rate limiting
 
 ## Troubleshooting Guide
 
-### Common Issues
+### No Enhanced Telemetry Data
+1. Verify `sendEnhancedTelemetry()` called in OpMode loop
+2. Check dashboard for `__enhanced_dashboard__` key reception
+3. Validate network connectivity
 
-1. **Messages not reaching dashboard**
-   - Check WebSocket connection
-   - Verify message format
-   - Check network configuration
+### JSON Serialization Errors
+1. Check logcat for Jackson exceptions
+2. Verify POJO getter/setter naming conventions
+3. Ensure all fields have proper types
 
-2. **Performance issues**
-   - Reduce update frequency
-   - Optimize message size
-   - Check for memory leaks
+### Performance Issues
+1. Confirm 10Hz rate limiting is active
+2. Monitor message sizes
+3. Check for blocking operations in telemetry methods
 
-3. **Data synchronization**
-   - Ensure timestamp accuracy
-   - Handle clock drift
-   - Implement message ordering
+## Code Locations
 
-## Alternative Implementation Approaches
+- **Message POJOs**: `/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/dashboard/messages/`
+- **Dashboard Manager**: `/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/dashboard/EnhancedDashboard.java`
+- **Telemetry Manager**: `/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/dashboard/TelemetryManager.java`
+- **Subsystem Integration**: Various subsystem classes with `sendEnhancedTelemetry()` methods
 
-### Option 1: Direct WebSocket Server
-Instead of using FTC Dashboard's WebSocket, implement a separate WebSocket server:
+## Next Steps
 
-```java
-public class EnhancedWebSocketServer {
-    private WebSocketServer server;
-    
-    public EnhancedWebSocketServer(int port) {
-        server = new WebSocketServer(new InetSocketAddress(port)) {
-            @Override
-            public void onMessage(WebSocket conn, String message) {
-                // Handle incoming messages
-            }
-        };
-    }
-    
-    public void broadcast(String message) {
-        server.broadcast(message);
-    }
-}
-```
+1. Complete telemetry integration for remaining subsystems
+2. Test with actual enhanced dashboard UI
+3. Add performance monitoring and optimization
+4. Document dashboard configuration requirements
+5. Create subsystem-specific dashboard widgets
 
-### Option 2: REST API Approach
-Implement a REST API for telemetry updates:
-
-```java
-public class TelemetryAPI {
-    private final OkHttpClient client = new OkHttpClient();
-    private final String baseUrl = "http://192.168.43.1:3000/api";
-    
-    public void postTelemetry(String endpoint, String json) {
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json"));
-        Request request = new Request.Builder()
-            .url(baseUrl + endpoint)
-            .post(body)
-            .build();
-        
-        client.newCall(request).enqueue(new Callback() {
-            // Handle response
-        });
-    }
-}
-```
-
-## Conclusion
-
-This implementation plan provides a comprehensive approach to integrating enhanced telemetry from the FTC robot code to the Redux-based dashboard. The modular design allows for incremental implementation and easy debugging. Follow the phases sequentially for best results.
-
-## Additional Resources
+## References
 
 - [FTC Dashboard Documentation](https://acmerobotics.github.io/ftc-dashboard)
-- [WebSocket Protocol RFC](https://datatracker.ietf.org/doc/html/rfc6455)
-- [Redux Documentation](https://redux.js.org/)
-- [React Documentation](https://reactjs.org/)
+- [Jackson Annotations Guide](https://github.com/FasterXML/jackson-annotations/wiki)
+- [Testing Guide](./DASHBOARD_TESTING_GUIDE.md)

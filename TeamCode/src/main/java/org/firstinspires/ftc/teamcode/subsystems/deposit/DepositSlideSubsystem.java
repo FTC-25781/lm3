@@ -16,6 +16,9 @@ import org.firstinspires.ftc.teamcode.sensors.UltrasonicDistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Subsystem;
+import org.firstinspires.ftc.teamcode.dashboard.EnhancedDashboard;
+import org.firstinspires.ftc.teamcode.dashboard.SubsystemTelemetryBuilder;
+import org.firstinspires.ftc.teamcode.dashboard.messages.*;
 
 import java.util.concurrent.TimeUnit;
 
@@ -54,6 +57,7 @@ public class DepositSlideSubsystem implements Subsystem {
     public Deposit_state CURRENT_STATE = Deposit_state.UNINITIALISED;
     ElapsedTime timer = new ElapsedTime();
     public final Telemetry telemetry;
+    private EnhancedDashboard enhancedDashboard = EnhancedDashboard.getInstance();
 
     public DepositSlideSubsystem(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
@@ -202,5 +206,38 @@ public class DepositSlideSubsystem implements Subsystem {
             default:
                 break;
         }
+    }
+    
+    public void sendEnhancedTelemetry() {
+        // Create deposit data
+        DepositData depositData = new DepositData();
+        depositData.setSlidePosition(verticalDistance);
+        depositData.setSlidePosition2(verticalSlideMotor2.getCurrentPosition());
+        depositData.setTargetPosition(MAX_HEIGHT); // You may want to track actual target
+        depositData.setState(CURRENT_STATE.name());
+        depositData.setLeftMotorPower(verticalSlideMotor.getPower());
+        depositData.setRightMotorPower(verticalSlideMotor2.getPower());
+        depositData.setLaserDistance(laserSensor.getDistance(DistanceUnit.CM));
+        depositData.setDepositComplete(CURRENT_STATE == Deposit_state.STOPPED || 
+                                      CURRENT_STATE == Deposit_state.RETRACTED);
+        
+        // Send subsystem update
+        enhancedDashboard.sendSubsystemUpdate(
+            new SubsystemUpdateMessage("deposit", depositData)
+        );
+        
+        // Send telemetry values
+        TelemetryUpdateMessage telemetryMessage = new SubsystemTelemetryBuilder("deposit")
+            .addValue("slide_position", verticalDistance, "mm")
+            .addValue("left_motor_pos", verticalSlideMotor.getCurrentPosition(), "ticks")
+            .addValue("right_motor_pos", verticalSlideMotor2.getCurrentPosition(), "ticks")
+            .addValue("left_motor_current", verticalSlideMotor.getCurrent(CurrentUnit.AMPS), "A")
+            .addValue("right_motor_current", verticalSlideMotor2.getCurrent(CurrentUnit.AMPS), "A")
+            .addValue("state", CURRENT_STATE.name())
+            .addValue("limit_switch", !depositLimitSwitch.getState())
+            .addValue("laser_distance", laserSensor.getDistance(DistanceUnit.CM), "cm")
+            .build();
+        
+        enhancedDashboard.sendTelemetryUpdate(telemetryMessage);
     }
 }

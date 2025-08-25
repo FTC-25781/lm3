@@ -10,6 +10,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.dashboard.EnhancedDashboard;
+import org.firstinspires.ftc.teamcode.dashboard.SubsystemTelemetryBuilder;
+import org.firstinspires.ftc.teamcode.dashboard.messages.*;
 
 public class IntakeSlideSubsystem {
 
@@ -21,6 +26,8 @@ public class IntakeSlideSubsystem {
     private final double MAX_POS = 36;
     private final int MIN_POS = 23;
     private final int EXCHANGE_POS = 20; // TODO: find exchange value
+    
+    private EnhancedDashboard enhancedDashboard = EnhancedDashboard.getInstance();
 
     public enum Intake_state {
         INITIALISED,
@@ -104,5 +111,31 @@ public class IntakeSlideSubsystem {
                 break;
         }
 
+    }
+    
+    public void sendEnhancedTelemetry() {
+        // Create intake data
+        IntakeData intakeData = new IntakeData();
+        intakeData.setSlidePosition(sensorDistance.getDistance(DistanceUnit.CM));
+        intakeData.setTargetPosition(MIN_POS); // You may want to track target position
+        intakeData.setState(CURRENT_STATE.name());
+        intakeData.setMotorPower(slideMotor.getPower());
+        intakeData.setLimitSwitch(!intakeLimitSwitch.getState());
+        intakeData.setSampleDetected(false); // Set based on your detection logic
+        
+        // Send subsystem update
+        enhancedDashboard.sendSubsystemUpdate(
+            new SubsystemUpdateMessage("intake", intakeData)
+        );
+        
+        // Send telemetry values
+        TelemetryUpdateMessage telemetryMessage = new SubsystemTelemetryBuilder("intake")
+            .addValue("slide_position", sensorDistance.getDistance(DistanceUnit.CM), "cm")
+            .addValue("motor_current", ((DcMotorEx) slideMotor).getCurrent(CurrentUnit.AMPS), "A")
+            .addValue("state", CURRENT_STATE.name())
+            .addValue("limit_switch", !intakeLimitSwitch.getState())
+            .build();
+        
+        enhancedDashboard.sendTelemetryUpdate(telemetryMessage);
     }
 }

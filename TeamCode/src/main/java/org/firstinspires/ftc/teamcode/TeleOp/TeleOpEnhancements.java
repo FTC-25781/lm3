@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.subsystems.deposit.DepositV4BSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeClawSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeSlideSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.intake.IntakeV4BSubsystem;
+import org.firstinspires.ftc.teamcode.dashboard.TelemetryManager;
 
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +49,7 @@ public class TeleOpEnhancements extends OpMode {
     public IntakeV4BSubsystem intakeV4B;
 
     private boolean AUTO_RUN=false;
+    private TelemetryManager telemetryManager;
 
     /**
      * This initializes the drive motors as well as the Follower and motion Vectors.
@@ -74,6 +76,8 @@ public class TeleOpEnhancements extends OpMode {
         rightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        telemetryManager = TelemetryManager.getInstance();
+
         follower.startTeleopDrive();
     }
 
@@ -94,6 +98,14 @@ public class TeleOpEnhancements extends OpMode {
         //if the right bumper is pressed toggle auto run
         if (gamepad1.a) AUTO_RUN=!AUTO_RUN;
         autoTransfer();
+        
+        // Send enhanced telemetry
+        follower.sendEnhancedTelemetry();
+        intakeSlide.sendEnhancedTelemetry();
+        depositSlide.sendEnhancedTelemetry();
+        
+        // Update telemetry manager for general data
+        telemetryManager.update();
     }
 
     private void updateIntakeControls() {

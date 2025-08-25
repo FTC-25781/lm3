@@ -54,6 +54,13 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.firstinspires.ftc.teamcode.dashboard.EnhancedDashboard;
+import org.firstinspires.ftc.teamcode.dashboard.SubsystemTelemetryBuilder;
+import org.firstinspires.ftc.teamcode.dashboard.messages.*;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 /**
  * This is the Follower class. It handles the actual following of the paths and all the on-the-fly
@@ -78,6 +85,7 @@ public class Follower {
 
     private PoseUpdater poseUpdater;
     private DashboardPoseTracker dashboardPoseTracker;
+    private EnhancedDashboard enhancedDashboard = EnhancedDashboard.getInstance();
 
     private Pose closestPose;
 
@@ -1066,6 +1074,70 @@ public class Follower {
      */
     public DashboardPoseTracker getDashboardPoseTracker() {
         return dashboardPoseTracker;
+    }
+
+    /**
+     * Send enhanced telemetry data to the dashboard
+     */
+    public void sendEnhancedTelemetry() {
+        // Create drivetrain data
+        DrivetrainData drivetrainData = new DrivetrainData();
+        
+        // Set position
+        drivetrainData.setPosition(new DrivetrainData.Position(
+            poseUpdater.getPose().getX(),
+            poseUpdater.getPose().getY(),
+            poseUpdater.getPose().getHeading()
+        ));
+        
+        // Set velocity - check if velocity methods exist
+        try {
+            drivetrainData.setVelocity(new DrivetrainData.Velocity(
+                poseUpdater.getVelocity().getXComponent(),
+                poseUpdater.getVelocity().getYComponent(),
+                poseUpdater.getAngularVelocity()
+            ));
+        } catch (Exception e) {
+            // If velocity methods don't exist, set to zero
+            drivetrainData.setVelocity(new DrivetrainData.Velocity(0, 0, 0));
+        }
+        
+        // Set heading
+        drivetrainData.setHeading(Math.toDegrees(poseUpdater.getPose().getHeading()));
+        
+        // Set encoder values
+        Map<String, Integer> encoders = new HashMap<>();
+        encoders.put("leftFront", leftFront.getCurrentPosition());
+        encoders.put("leftBack", leftBack.getCurrentPosition());
+        encoders.put("rightFront", rightFront.getCurrentPosition());
+        encoders.put("rightBack", rightBack.getCurrentPosition());
+        drivetrainData.setEncoders(encoders);
+        
+        // Set motor currents
+        Map<String, Double> currents = new HashMap<>();
+        currents.put("leftFront", leftFront.getCurrent(CurrentUnit.AMPS));
+        currents.put("leftBack", leftBack.getCurrent(CurrentUnit.AMPS));
+        currents.put("rightFront", rightFront.getCurrent(CurrentUnit.AMPS));
+        currents.put("rightBack", rightBack.getCurrent(CurrentUnit.AMPS));
+        drivetrainData.setCurrents(currents);
+        
+        // Send subsystem update
+        enhancedDashboard.sendSubsystemUpdate(
+            new SubsystemUpdateMessage("drivetrain", drivetrainData)
+        );
+        
+        // Send telemetry values using builder
+        TelemetryUpdateMessage telemetryMessage = new SubsystemTelemetryBuilder("drivetrain")
+            .addValue("x_position", poseUpdater.getPose().getX(), "inches")
+            .addValue("y_position", poseUpdater.getPose().getY(), "inches")
+            .addValue("heading", Math.toDegrees(poseUpdater.getPose().getHeading()), "degrees")
+            .addValue("leftFront_pos", leftFront.getCurrentPosition(), "ticks")
+            .addValue("leftBack_pos", leftBack.getCurrentPosition(), "ticks")
+            .addValue("rightFront_pos", rightFront.getCurrentPosition(), "ticks")
+            .addValue("rightBack_pos", rightBack.getCurrentPosition(), "ticks")
+            .build();
+        
+        enhancedDashboard.sendTelemetryUpdate(telemetryMessage);
     }
 
     /**
